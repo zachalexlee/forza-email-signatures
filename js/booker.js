@@ -18,7 +18,9 @@
       err.body = body;
       throw err;
     }
-    return res.status === 204 ? null : res.json();
+    if (res.status === 204) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null; // 201 Created often has an empty body
   }
 
   /* ---- timezone math: convert a wall-clock time in TZ to a UTC Date ---- */
