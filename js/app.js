@@ -40,7 +40,7 @@
     const d = Object.assign({}, state);
     if (!d.fullName) d.fullName = "Alex Rivera";
     if (!d.jobTitle) d.jobTitle = "Account Executive";
-    if (!d.email) d.email = "alex@forzaatm.com";
+    if (!d.email) d.email = "alex@forzapayments.com";
     if (!d.phone) d.phone = B.phone;
     if (!d.website) d.website = B.websiteDisplay;
     return d;
@@ -249,7 +249,7 @@ ${sections.join("\n")}${script}`,
     });
 
     $("csvTemplateBtn").addEventListener("click", () => {
-      const sample = CSV_HEADERS.join(",") + "\nAlex Rivera,Account Executive,Merchant Services,alex@forzaatm.com,(888) 302-3401,(253) 555-0100\n";
+      const sample = CSV_HEADERS.join(",") + "\nAlex Rivera,Account Executive,Merchant Services,alex@forzapayments.com,(888) 302-3401,(253) 555-0100\n";
       downloadFile("forza-team-roster.csv", sample);
     });
     $("csvUpload").addEventListener("change", (e) => {

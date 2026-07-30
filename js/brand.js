@@ -9,8 +9,8 @@
 const FORZA_BRAND = {
   companyName: "Forza Payments",
   tagline: "ATM & Merchant Services",
-  website: "https://forzaatm.com",
-  websiteDisplay: "forzaatm.com",
+  website: "https://forzapayments.com",
+  websiteDisplay: "forzapayments.com",
   phone: "(888) 302-3401",
 
   // Hosted logo for use inside signatures. Leave "" to use the text wordmark,
