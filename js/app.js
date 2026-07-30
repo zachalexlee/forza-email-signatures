@@ -19,6 +19,7 @@
     template: "classic",
     accent: B.colors.accent,
     disclaimer: "none",
+    font: "",
   };
   FIELDS.forEach((f) => (state[f] = $(f) ? $(f).value : ""));
   CHECKBOXES.forEach((f) => (state[f] = false));
@@ -69,6 +70,7 @@
       b.classList.toggle("active", b.dataset.color === state.accent));
     $("customDisclaimerWrap").classList.toggle("hidden", state.disclaimer !== "custom");
     $("utmCampaignWrap").classList.toggle("hidden", !state.utmEnabled);
+    if ($("fontSelect")) $("fontSelect").value = state.font || "";
   }
 
   // ---------- presets ----------
@@ -325,6 +327,20 @@ ${sections.join("\n")}${script}`,
       syncToForm(); render(); save();
     });
     gallery.appendChild(clearBtn);
+
+    // Font choices from brand config.
+    const fontSel = $("fontSelect");
+    B.fontChoices.forEach((f) => {
+      const o = document.createElement("option");
+      o.value = f.stack;
+      o.textContent = f.name;
+      if (f.stack) o.style.fontFamily = f.stack;
+      fontSel.appendChild(o);
+    });
+    fontSel.addEventListener("change", () => {
+      state.font = fontSel.value;
+      render(); save();
+    });
 
     // Accent swatches from brand config.
     const picker = $("accentPicker");

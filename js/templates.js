@@ -34,7 +34,9 @@
     return /^https?:\/\//i.test(url) ? url : "https://" + url;
   }
 
-  const FONT = (d) => (d.template === "executive" ? B.fonts.serif : B.fonts.sans);
+  // Chosen font wins; otherwise serif-flavored templates default to Georgia.
+  const SERIF_TEMPLATES = ["executive", "minimal"];
+  const FONT = (d) => d.font || (SERIF_TEMPLATES.includes(d.template) ? B.fonts.serif : B.fonts.sans);
 
   function link(d, href, text, opts = {}) {
     const color = opts.color || d.accent;
@@ -222,6 +224,87 @@
 <tr><td colspan="${d.photoUrl ? 2 : 1}" style="padding:12px 0 0;">${wordmark(d, { width: 120 })}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
       return wrap(d, inner, 540);
     },
+  };
+
+  /* ---- second wave of templates ---- */
+
+  TEMPLATES.bold = function (d) {
+    const inner = `
+<tr><td style="background-color:${B.colors.primary};padding:14px 18px;">
+  <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>
+    ${d.photoUrl ? `<td style="padding:0 14px 0 0;">${photoCell(d, 64)}</td>` : ""}
+    <td>
+      <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+        <tr><td style="font-family:${FONT(d)};font-size:19px;font-weight:bold;color:#FFFFFF;padding:0;">${esc(d.fullName)}</td></tr>
+        ${d.jobTitle ? `<tr><td style="font-family:${FONT(d)};font-size:13px;font-weight:bold;color:${d.accent === B.colors.primary ? "#FFFFFF" : d.accent};padding:3px 0 0;">${esc([d.jobTitle, d.department].filter(Boolean).join(", "))}</td></tr>` : ""}
+      </table>
+    </td>
+  </tr></table>
+</td></tr>
+<tr><td style="border-left:4px solid ${d.accent};padding:12px 0 0 14px;">
+  <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d)}</table>
+  ${socialRow(d)}
+  ${ctaButton(d)}
+</td></tr>
+<tr><td style="padding:12px 0 0;">${wordmark(d, { width: 110 })}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 520);
+  };
+
+  TEMPLATES.centered = function (d) {
+    const center = (html) => `<tr><td align="center" style="padding:0;text-align:center;">${html}</td></tr>`;
+    const inner = `
+${center(d.photoUrl ? photoCell(d, 84).replace('style="display:block;', 'style="display:inline-block;') : wordmark(d, { width: 130 }).replace('style="display:block;', 'style="display:inline-block;'))}
+<tr><td align="center" style="font-family:${FONT(d)};font-size:18px;font-weight:bold;color:${B.colors.primary};padding:10px 0 0;text-align:center;">${esc(d.fullName)}</td></tr>
+${d.jobTitle || d.department ? `<tr><td align="center" style="font-family:${FONT(d)};font-size:13px;font-weight:bold;color:${d.accent};padding:2px 0 0;text-align:center;">${esc([d.jobTitle, d.department].filter(Boolean).join(", "))}</td></tr>` : ""}
+${d.company ? `<tr><td align="center" style="font-family:${FONT(d)};font-size:13px;color:${B.colors.text};padding:1px 0 0;text-align:center;">${esc(d.company)}</td></tr>` : ""}
+<tr><td align="center" style="padding:8px 0 0;"><table cellpadding="0" cellspacing="0" border="0" width="44" style="border-collapse:collapse;"><tr><td height="2" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+<tr><td align="center" style="padding:6px 0 0;text-align:center;"><table align="center" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:0 auto;">${contactLines(d)}</table></td></tr>
+<tr><td align="center" style="padding:0;text-align:center;">${socialRow(d).replace('style="border-collapse:collapse;', 'align="center" style="margin:8px auto 0;border-collapse:collapse;')}</td></tr>
+<tr><td align="center" style="padding:0;text-align:center;">${ctaButton(d).replace('style="border-collapse:collapse;', 'align="center" style="margin:10px auto 0;border-collapse:collapse;')}</td></tr>
+<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 440);
+  };
+
+  TEMPLATES.minimal = function (d) {
+    // Understated: thin rule, spaced caps, text links only — no badges or buttons.
+    const textLinks = SOCIALS.filter((s) => d[s.key]).map((s) =>
+      link(d, withUtm(normalizeUrl(d[s.key]), d), s.name, { color: B.colors.muted, size: 12 })).join(`<span style="color:${B.colors.muted};">&nbsp;/&nbsp;</span>`);
+    const cta = d.ctaText && d.ctaUrl
+      ? `<tr><td style="padding:8px 0 0;">${link(d, withUtm(normalizeUrl(d.ctaUrl), d), d.ctaText + " →", { bold: true })}</td></tr>` : "";
+    const book = d.bookingUrl
+      ? `<tr><td style="padding:4px 0 0;">${link(d, withUtm(normalizeUrl(d.bookingUrl), d), "Book a meeting →", { bold: true, color: B.colors.primary })}</td></tr>` : "";
+    const inner = `
+<tr><td style="padding:0 0 10px;"><table cellpadding="0" cellspacing="0" border="0" width="180" style="border-collapse:collapse;"><tr><td height="1" style="background-color:${B.colors.primary};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+<tr><td style="font-family:${FONT(d)};font-size:15px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:${B.colors.primary};padding:0;">${esc(d.fullName)}</td></tr>
+${d.jobTitle ? `<tr><td style="font-family:${FONT(d)};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${B.colors.muted};padding:4px 0 0;">${esc([d.jobTitle, d.company].filter(Boolean).join(" · "))}</td></tr>` : ""}
+<tr><td style="padding:8px 0 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d, { size: 12 })}</table></td></tr>
+${textLinks ? `<tr><td style="padding:6px 0 0;">${textLinks}</td></tr>` : ""}
+${cta}${book}
+<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 520);
+  };
+
+  TEMPLATES.corporate = function (d) {
+    const inner = `
+<tr><td colspan="2" style="padding:0 0 10px;">${wordmark(d, { width: 140 })}</td></tr>
+<tr><td colspan="2" style="padding:0 0 12px;"><table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td height="2" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+<tr>
+  <td valign="top" style="padding:0 20px 0 0;">
+    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+      ${d.photoUrl ? `<tr><td style="padding:0 0 8px;">${photoCell(d, 68)}</td></tr>` : ""}
+      ${nameBlock(d)}
+    </table>
+  </td>
+  <td valign="top" align="right" style="text-align:right;">
+    <table align="right" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d)}</table>
+  </td>
+</tr>
+<tr>
+  <td style="padding:4px 0 0;">${socialRow(d)}</td>
+  <td align="right" style="text-align:right;">${ctaButton(d).replace('style="border-collapse:collapse;', 'align="right" style="border-collapse:collapse;')}</td>
+</tr>
+<tr><td colspan="2" style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 560);
   };
 
   window.renderSignature = function (d) {

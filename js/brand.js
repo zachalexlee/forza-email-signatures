@@ -39,6 +39,21 @@ const FORZA_BRAND = {
     serif: "Georgia, 'Times New Roman', serif",
   },
 
+  // Font choices for the builder. Email-safe stacks only — web fonts don't
+  // load in most email clients, so anything fancier falls back unpredictably.
+  fontChoices: [
+    { name: "Template default", stack: "" },
+    { name: "Arial (clean sans)", stack: "Arial, Helvetica, sans-serif" },
+    { name: "Helvetica", stack: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
+    { name: "Verdana (wide sans)", stack: "Verdana, Geneva, sans-serif" },
+    { name: "Tahoma (compact sans)", stack: "Tahoma, Geneva, sans-serif" },
+    { name: "Trebuchet MS (friendly sans)", stack: "'Trebuchet MS', Tahoma, sans-serif" },
+    { name: "Georgia (modern serif)", stack: "Georgia, 'Times New Roman', serif" },
+    { name: "Palatino (elegant serif)", stack: "'Palatino Linotype', 'Book Antiqua', Palatino, serif" },
+    { name: "Times New Roman (classic serif)", stack: "'Times New Roman', Times, serif" },
+    { name: "Courier New (typewriter)", stack: "'Courier New', Courier, monospace" },
+  ],
+
   // Where personal booking pages live (meeting booker).
   bookingBase: "https://forza-email-signatures.vercel.app/book.html",
 
