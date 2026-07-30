@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Meeting — Forza Payments</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/booker.css">
+<link rel="icon" href="assets/forza-icon.png" type="image/png">
+</head>
+<body>
+<header class="topbar">
+  <a href="https://forzapayments.com" target="_blank"><img src="assets/forza-logo.png" alt="Forza Payments" class="topbar-logo"></a>
+  <div>
+    <h1 id="pageTitle">Book a Meeting</h1>
+    <p id="pageSub">Pick a time that works for you.</p>
+  </div>
+</header>
+
+<main class="book-layout">
+  <div id="loading" class="panel book-msg">Loading availability…</div>
+
+  <div id="notFound" class="panel book-msg hidden">
+    <b>Booking page not found.</b><br>
+    Check the link, or <a href="meetings.html">create your own booking page</a>.
+  </div>
+
+  <section id="picker" class="hidden">
+    <div class="panel">
+      <h2 id="bookerName"></h2>
+      <p class="hint" id="bookerMeta"></p>
+      <p class="hint">All times are <b id="tzLabel"></b>.</p>
+      <div id="days"></div>
+    </div>
+  </section>
+
+  <section id="form" class="hidden">
+    <div class="panel">
+      <h2>Confirm your meeting</h2>
+      <p id="chosenSlot" class="chosen-slot"></p>
+      <label>Your name <input id="guestName" required></label>
+      <label>Your email <input id="guestEmail" type="email" required></label>
+      <label>What would you like to discuss? (optional) <textarea id="notes" rows="3"></textarea></label>
+      <div class="row-buttons">
+        <button type="button" class="btn primary" id="confirmBtn">Confirm booking</button>
+        <button type="button" class="btn ghost" id="backBtn">← Pick another time</button>
+      </div>
+      <div id="bookError" class="hint book-error"></div>
+    </div>
+  </section>
+
+  <section id="done" class="hidden">
+    <div class="panel book-msg">
+      <h2>✅ You're booked!</h2>
+      <p id="doneDetails"></p>
+      <div class="row-buttons">
+        <button type="button" class="btn primary" id="icsBtn">⬇ Add to calendar (.ics)</button>
+      </div>
+      <p class="hint">A copy of the details is in the calendar file — see you then!</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">Powered by the Forza Payments meeting booker.</footer>
+
+<script src="js/booker-config.js"></script>
+<script src="js/booker.js"></script>
+<script>
+(async function () {
+  const $ = (id) => document.getElementById(id);
+  const slug = new URLSearchParams(location.search).get("u");
+  let booker = null, chosen = null;
+
+  function show(id) {
+    ["loading", "notFound", "picker", "form", "done"].forEach((s) =>
+      $(s).classList.toggle("hidden", s !== id && !(id === "form" && s === "picker")));
+  }
+
+  if (!slug) { show("notFound"); return; }
+  $("tzLabel").textContent = BOOKER_API.timeZoneLabel;
+
+  async function loadSlots() {
+    const rows = await Booker.api(`bookers?slug=eq.${encodeURIComponent(slug)}&select=id,slug,name,title,slot_minutes,availability`);
+    if (!rows.length) { show("notFound"); return; }
+    booker = rows[0];
+    $("bookerName").textContent = booker.name;
+    $("bookerMeta").textContent = [booker.title, "Forza Payments", booker.slot_minutes + "-minute meeting"].filter(Boolean).join(" • ");
+    $("pageTitle").textContent = "Book a meeting with " + booker.name.split(" ")[0];
+
+    const booked = await Booker.api(`booked_slots?booker_id=eq.${booker.id}&start_ts=gte.${new Date().toISOString()}&select=start_ts`);
+    const bookedSet = new Set(booked.map((b) => new Date(b.start_ts).toISOString()));
+    const days = Booker.computeSlots(booker, bookedSet);
+
+    const wrap = $("days");
+    wrap.innerHTML = "";
+    if (!days.length) {
+      wrap.innerHTML = '<p class="hint">No open times in the next two weeks — please email directly.</p>';
+    }
+    days.forEach((day) => {
+      const h = document.createElement("h3");
+      h.className = "day-head";
+      h.textContent = Booker.fmtInTz(day.slots[0], BOOKER_API.timeZone,
+        { weekday: "long", month: "long", day: "numeric" });
+      const grid = document.createElement("div");
+      grid.className = "slot-grid";
+      day.slots.forEach((s) => {
+        const b = document.createElement("button");
+        b.className = "slot-btn";
+        b.textContent = Booker.fmtInTz(s, BOOKER_API.timeZone, { hour: "numeric", minute: "2-digit" });
+        b.addEventListener("click", () => {
+          chosen = s;
+          $("chosenSlot").textContent = Booker.fmtInTz(s, BOOKER_API.timeZone,
+            { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" }) +
+            " " + BOOKER_API.timeZoneLabel + " · " + booker.slot_minutes + " min with " + booker.name;
+          $("bookError").textContent = "";
+          show("form");
+          $("form").scrollIntoView({ behavior: "smooth" });
+        });
+        grid.appendChild(b);
+      });
+      wrap.appendChild(h);
+      wrap.appendChild(grid);
+    });
+    show("picker");
+  }
+
+  $("backBtn").addEventListener("click", () => show("picker"));
+
+  $("confirmBtn").addEventListener("click", async () => {
+    const name = $("guestName").value.trim();
+    const email = $("guestEmail").value.trim();
+    if (!name || !/.+@.+\..+/.test(email)) {
+      $("bookError").textContent = "Please enter your name and a valid email.";
+      return;
+    }
+    $("confirmBtn").disabled = true;
+    const end = new Date(chosen.getTime() + booker.slot_minutes * 60000);
+    try {
+      await Booker.api("bookings", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({
+          booker_id: booker.id,
+          start_ts: chosen.toISOString(),
+          end_ts: end.toISOString(),
+          guest_name: name,
+          guest_email: email,
+          notes: $("notes").value.trim() || null,
+        }),
+      });
+    } catch (e) {
+      $("confirmBtn").disabled = false;
+      if (e.status === 409) {
+        $("bookError").textContent = "That time was just taken — please pick another slot.";
+        await loadSlots();
+      } else {
+        $("bookError").textContent = "Something went wrong — please try again.";
+      }
+      return;
+    }
+    const when = Booker.fmtInTz(chosen, BOOKER_API.timeZone,
+      { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+    $("doneDetails").textContent = `${booker.slot_minutes} minutes with ${booker.name} on ${when} ${BOOKER_API.timeZoneLabel}.`;
+    $("icsBtn").onclick = () => Booker.download(
+      "forza-meeting.ics",
+      Booker.icsFor(`Meeting: ${name} × ${booker.name} (Forza Payments)`,
+        `Booked via the Forza meeting booker.\n${$("notes").value.trim()}`, chosen, end, booker.name),
+      "text/calendar");
+    show("done");
+  });
+
+  try { await loadSlots(); } catch (e) { show("notFound"); }
+})();
+</script>
+</body>
+</html>

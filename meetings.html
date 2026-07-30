@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Booking Page — Forza Payments</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/booker.css">
+<link rel="icon" href="assets/forza-icon.png" type="image/png">
+</head>
+<body>
+<header class="topbar">
+  <a href="index.html"><img src="assets/forza-logo.png" alt="Forza Payments" class="topbar-logo"></a>
+  <div>
+    <h1>Meeting Booker</h1>
+    <p>Create your personal booking page, set your weekly availability, and see who booked you.</p>
+  </div>
+</header>
+
+<main class="book-layout">
+  <!-- ============ CREATE ============ -->
+  <section id="create">
+    <div class="panel">
+      <h2>Create your booking page</h2>
+      <div class="grid-2">
+        <label>Your name <input id="cName" placeholder="Alex Rivera"></label>
+        <label>Your email <input id="cEmail" type="email" placeholder="alex@forzapayments.com"></label>
+        <label>Job title <input id="cTitle" placeholder="Account Executive"></label>
+        <label>Meeting length
+          <select id="cSlot"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">60 min</option></select>
+        </label>
+      </div>
+      <label>Your link <div class="slug-row"><code>book.html?u=</code><input id="cSlug" placeholder="alex-rivera" style="flex:1"></div></label>
+      <h3 class="avail-head">Weekly availability (<span id="tzLabel2"></span>)</h3>
+      <div id="cAvail"></div>
+      <div class="row-buttons"><button type="button" class="btn primary" id="createBtn">Create my booking page</button></div>
+      <div id="createStatus" class="hint"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Already have a page?</h2>
+      <p class="hint">Enter your link name and the edit key you were given when you created it.</p>
+      <div class="grid-2">
+        <label>Link name (slug) <input id="mSlug" placeholder="alex-rivera"></label>
+        <label>Edit key <input id="mKey" placeholder="xxxxxxxx-xxxx-…"></label>
+      </div>
+      <div class="row-buttons"><button type="button" class="btn secondary" id="manageBtn">Open my dashboard</button></div>
+      <div id="manageStatus" class="hint"></div>
+    </div>
+  </section>
+
+  <!-- ============ MANAGE ============ -->
+  <section id="manage" class="hidden">
+    <div class="panel">
+      <h2 id="mTitle">My booking page</h2>
+      <p class="hint">Public link: <a id="mLink" target="_blank"></a>
+        <button type="button" class="btn secondary btn-small" id="copyLinkBtn">Copy</button>
+        <button type="button" class="btn secondary btn-small" id="toBuilderBtn">Use in my signature →</button></p>
+      <p class="hint">Edit key (keep it safe — it's the only way to manage this page): <code id="mKeyShow"></code></p>
+      <h3 class="avail-head">Weekly availability (<span id="tzLabel3"></span>)</h3>
+      <div id="mAvail"></div>
+      <label style="max-width:200px;">Meeting length
+        <select id="mSlot"><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option></select>
+      </label>
+      <div class="row-buttons"><button type="button" class="btn primary" id="saveAvailBtn">Save changes</button></div>
+      <div id="saveStatus" class="hint"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Upcoming meetings</h2>
+      <div id="bookingsList" class="hint">Loading…</div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">Forza Payments — internal tool.</footer>
+
+<script src="js/booker-config.js"></script>
+<script src="js/booker.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const ADMIN_KEY = "forza-booker-admin-v1";
+  $("tzLabel2").textContent = BOOKER_API.timeZoneLabel;
+  $("tzLabel3").textContent = BOOKER_API.timeZoneLabel;
+
+  function availEditor(container, initial) {
+    container.innerHTML = "";
+    const rows = [];
+    for (let d = 0; d < 7; d++) {
+      const windows = (initial || {})[String(d)] || [];
+      const on = windows.length > 0;
+      const [start, end] = windows[0] || ["09:00", "17:00"];
+      const row = document.createElement("div");
+      row.className = "avail-row";
+      row.innerHTML = `<label class="avail-day"><input type="checkbox" ${on ? "checked" : ""}> ${DAYS[d]}</label>
+        <input type="time" value="${start}" step="900"> <span>to</span> <input type="time" value="${end}" step="900">`;
+      container.appendChild(row);
+      rows.push(row);
+    }
+    return () => {
+      const out = {};
+      rows.forEach((row, d) => {
+        const [cb] = row.querySelectorAll("input[type=checkbox]");
+        const [s, e] = row.querySelectorAll("input[type=time]");
+        if (cb.checked && s.value && e.value && s.value < e.value) out[String(d)] = [[s.value, e.value]];
+      });
+      return out;
+    };
+  }
+
+  const defaultAvail = { "1": [["09:00", "16:00"]], "2": [["09:00", "16:00"]], "3": [["09:00", "16:00"]], "4": [["09:00", "16:00"]], "5": [["09:00", "16:00"]] };
+  const readCreateAvail = availEditor($("cAvail"), defaultAvail);
+  let readManageAvail = null;
+  let creds = null;
+
+  $("cName").addEventListener("input", () => {
+    $("cSlug").value = $("cName").value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  });
+
+  $("createBtn").addEventListener("click", async () => {
+    const name = $("cName").value.trim(), email = $("cEmail").value.trim(), slug = $("cSlug").value.trim();
+    if (!name || !/.+@.+\..+/.test(email) || !/^[a-z0-9-]{2,40}$/.test(slug)) {
+      $("createStatus").textContent = "⚠️ Fill in name, a valid email, and a link name (letters, numbers, dashes).";
+      return;
+    }
+    const editKey = crypto.randomUUID();
+    try {
+      await Booker.api("bookers", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({
+          slug, name, email,
+          title: $("cTitle").value.trim() || null,
+          slot_minutes: parseInt($("cSlot").value, 10),
+          availability: readCreateAvail(),
+          edit_key: editKey,
+        }),
+      });
+    } catch (e) {
+      $("createStatus").textContent = e.status === 409
+        ? "⚠️ That link name is taken — try another."
+        : "⚠️ Could not create the page — try again.";
+      return;
+    }
+    creds = { slug, editKey };
+    localStorage.setItem(ADMIN_KEY, JSON.stringify(creds));
+    openManage(creds, true);
+  });
+
+  $("manageBtn").addEventListener("click", () => {
+    const slug = $("mSlug").value.trim(), key = $("mKey").value.trim();
+    if (!slug || !key) { $("manageStatus").textContent = "⚠️ Enter both fields."; return; }
+    openManage({ slug, editKey: key }, false);
+  });
+
+  async function openManage(c, justCreated) {
+    creds = c;
+    const rows = await Booker.api(`bookers?slug=eq.${encodeURIComponent(c.slug)}&select=name,title,slot_minutes,availability`);
+    if (!rows.length) { $("manageStatus").textContent = "⚠️ No page found for that link name."; return; }
+    const bk = rows[0];
+    const bookings = await loadBookings(c);
+    if (bookings === null && !justCreated) return; // bad key
+    localStorage.setItem(ADMIN_KEY, JSON.stringify(c));
+
+    $("mTitle").textContent = bk.name + " — booking page";
+    const url = new URL("book.html?u=" + c.slug, location.href).href;
+    $("mLink").textContent = url; $("mLink").href = url;
+    $("mKeyShow").textContent = c.editKey;
+    $("mSlot").value = String(bk.slot_minutes);
+    readManageAvail = availEditor($("mAvail"), bk.availability);
+    $("copyLinkBtn").onclick = () => navigator.clipboard.writeText(url);
+    $("toBuilderBtn").onclick = () => { location.href = "index.html#booking=" + encodeURIComponent(url); };
+    document.getElementById("create").classList.add("hidden");
+    document.getElementById("manage").classList.remove("hidden");
+  }
+
+  async function loadBookings(c) {
+    try {
+      const list = await Booker.api("rpc/list_bookings", {
+        method: "POST",
+        body: JSON.stringify({ p_slug: c.slug, p_edit_key: c.editKey }),
+      });
+      const el = $("bookingsList");
+      const upcoming = list.filter((b) => new Date(b.end_ts) > new Date());
+      el.innerHTML = upcoming.length ? "" : "No upcoming meetings yet — share your link!";
+      upcoming.forEach((b) => {
+        const div = document.createElement("div");
+        div.className = "booking-item";
+        div.innerHTML = `<b>${Booker.fmtInTz(new Date(b.start_ts), BOOKER_API.timeZone,
+          { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</b>
+          — ${b.guest_name.replace(/[<>&]/g, "")} &lt;${b.guest_email.replace(/[<>&]/g, "")}&gt;
+          ${b.notes ? "<div class='hint'>" + b.notes.replace(/[<>&]/g, "") + "</div>" : ""}`;
+        el.appendChild(div);
+      });
+      return list;
+    } catch (e) {
+      $("manageStatus").textContent = "⚠️ Could not load bookings — check the edit key.";
+      return null;
+    }
+  }
+
+  $("saveAvailBtn").addEventListener("click", async () => {
+    try {
+      const ok = await Booker.api("rpc/update_booker", {
+        method: "POST",
+        body: JSON.stringify({
+          p_slug: creds.slug,
+          p_edit_key: creds.editKey,
+          p_availability: readManageAvail(),
+          p_slot_minutes: parseInt($("mSlot").value, 10),
+        }),
+      });
+      $("saveStatus").textContent = ok ? "✅ Saved." : "⚠️ Wrong edit key.";
+    } catch (e) {
+      $("saveStatus").textContent = "⚠️ Save failed — try again.";
+    }
+  });
+
+  // returning admin: auto-open dashboard
+  try {
+    const saved = JSON.parse(localStorage.getItem(ADMIN_KEY));
+    if (saved && saved.slug && saved.editKey) openManage(saved, false);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

@@ -21,6 +21,14 @@ See [PLAN.md](PLAN.md) for the research and build plan.
 - **Dark-mode & mobile preview** toggles
 - **Autosave** — drafts persist in the browser (localStorage)
 - **Team mode** — upload a CSV roster, get one file with a ready-to-copy signature per employee
+- **Saved presets** — save named signature configs and share them as pre-filled links
+- **Banner gallery** — one-click on-brand promo banners (edit the list in `js/brand.js` to rotate campaigns)
+- **QR code** — optional scan-to-save-contact vCard QR
+- **Department presets** — auto-fill shared phone/address per department
+- **Meeting booker** — self-hosted scheduling: create a booking page at [meetings.html](meetings.html),
+  visitors book at `book.html?u=<your-name>`, and signatures get a "📅 Book a Meeting" button.
+  Backend is Supabase project `forza-email-signatures` (config in `js/booker-config.js`); schema and
+  row-level security live in the project's migrations.
 
 ## Branding
 

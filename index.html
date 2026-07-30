@@ -21,6 +21,17 @@
   <section class="editor" aria-label="Signature editor">
 
     <div class="panel">
+      <h2>My saved signatures</h2>
+      <div class="row-buttons preset-row">
+        <select id="presetSelect" style="flex:1;min-width:140px;"><option value="">— load a preset —</option></select>
+        <button type="button" class="btn secondary" id="presetSaveBtn">Save as…</button>
+        <button type="button" class="btn ghost" id="presetDeleteBtn" title="Delete selected preset">🗑</button>
+        <button type="button" class="btn secondary" id="shareLinkBtn" title="Copy a link that opens the builder pre-filled with this signature">🔗 Share link</button>
+      </div>
+      <div id="presetStatus" class="hint"></div>
+    </div>
+
+    <div class="panel">
       <h2>1. Choose a template</h2>
       <div class="template-picker" id="templatePicker">
         <button type="button" data-template="classic" class="active">Classic</button>
@@ -35,7 +46,10 @@
 
     <div class="panel">
       <h2>2. Your details</h2>
-      <div class="grid-2">
+      <label>Department preset (auto-fills shared info)
+        <select id="departmentPreset"></select>
+      </label>
+      <div class="grid-2" style="margin-top:10px;">
         <label>Full name <input id="fullName" placeholder="Alex Rivera"></label>
         <label>Job title <input id="jobTitle" placeholder="Account Executive"></label>
         <label>Department <input id="department" placeholder="Merchant Services"></label>
@@ -55,6 +69,7 @@
         <label>Logo URL <input id="logoUrl" placeholder="https://forzapayments.com/…/logo.png"></label>
       </div>
       <p class="hint">Use hosted image URLs (e.g. from your website). Leave the logo blank to use the built-in FORZA text wordmark, which renders in every email client. Uploaded/base64 images are often blocked by Gmail and Outlook, so this builder only accepts URLs.</p>
+      <label class="checkbox-label"><input type="checkbox" id="qrEnabled"> Add "scan to save contact" QR code</label>
     </div>
 
     <div class="panel">
@@ -71,7 +86,10 @@
 
     <div class="panel">
       <h2>5. Call to action &amp; banner</h2>
-      <div class="grid-2">
+      <label>Banner gallery (one click, on-brand)
+        <span class="banner-gallery" id="bannerGallery"></span>
+      </label>
+      <div class="grid-2" style="margin-top:10px;">
         <label>Button text <input id="ctaText" placeholder="Get a Free ATM Quote"></label>
         <label>Button link <input id="ctaUrl" placeholder="forzapayments.com/quote"></label>
         <label>Banner text <input id="bannerText" placeholder="24/7 support • 2,000+ customers nationwide"></label>
@@ -82,7 +100,15 @@
     </div>
 
     <div class="panel">
-      <h2>6. Legal disclaimer</h2>
+      <h2>6. Meeting booker</h2>
+      <p class="hint">Add a <b>📅 Book a Meeting</b> button to your signature. Don't have a booking
+      page yet? <a href="meetings.html" target="_blank">Create yours here</a> — pick your weekly
+      availability and get a personal link like <code>book.html?u=your-name</code>.</p>
+      <label>Your booking page link <input id="bookingUrl" placeholder="https://forza-email-signatures.vercel.app/book.html?u=alex"></label>
+    </div>
+
+    <div class="panel">
+      <h2>7. Legal disclaimer</h2>
       <label>Preset
         <select id="disclaimer">
           <option value="none">None</option>

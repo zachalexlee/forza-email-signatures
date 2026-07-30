@@ -39,6 +39,28 @@ const FORZA_BRAND = {
     serif: "Georgia, 'Times New Roman', serif",
   },
 
+  // Where personal booking pages live (meeting booker).
+  bookingBase: "https://forza-email-signatures.vercel.app/book.html",
+
+  // Pre-designed banner gallery. An admin can rotate the whole team's promo
+  // by editing this list — the builder shows these as one-click choices.
+  banners: [
+    { label: "Free ATM quote", text: "Get a Free ATM Quote — hassle-free install & 24/7 support", url: "https://forzapayments.com" },
+    { label: "2,000+ customers", text: "Trusted by 2,000+ businesses nationwide • 30+ years in ATMs", url: "https://forzapayments.com" },
+    { label: "24/7 support", text: "24/7 support line • 4 regional support centers", url: "https://forzapayments.com" },
+    { label: "Card processing", text: "Now offering credit card processing for retail & restaurants", url: "https://forzapayments.com" },
+    { label: "Referral", text: "Refer a business, earn a bonus — ask me how", url: "https://forzapayments.com" },
+  ],
+
+  // Department presets — one click fills shared contact details.
+  departments: {
+    "": { label: "— none —" },
+    sales: { label: "ATM Sales", department: "ATM Sales", phone: "(888) 302-3401", address: "5726 100th St SW Ste B, Lakewood, WA 98499" },
+    merchant: { label: "Merchant Services", department: "Merchant Services", phone: "(888) 302-3401", address: "5726 100th St SW Ste B, Lakewood, WA 98499" },
+    support: { label: "Support (24/7)", department: "Customer Support", phone: "(888) 302-3401", address: "5726 100th St SW Ste B, Lakewood, WA 98499" },
+    ops: { label: "Operations", department: "Operations", phone: "(888) 302-3401", address: "5726 100th St SW Ste B, Lakewood, WA 98499" },
+  },
+
   disclaimers: {
     none: "",
     confidentiality:

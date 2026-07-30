@@ -7,10 +7,11 @@
     "fullName", "jobTitle", "department", "company", "phone", "mobile",
     "email", "website", "address", "photoUrl", "logoUrl",
     "linkedin", "twitter", "facebook", "instagram", "youtube",
-    "ctaText", "ctaUrl", "bannerText", "bannerUrl",
+    "ctaText", "ctaUrl", "bannerText", "bannerUrl", "bookingUrl",
     "utmCampaign", "customDisclaimer",
   ];
-  const CHECKBOXES = ["monoSocial", "utmEnabled"];
+  const CHECKBOXES = ["monoSocial", "utmEnabled", "qrEnabled"];
+  const PRESETS_KEY = "forza-signature-presets-v1";
 
   const $ = (id) => document.getElementById(id);
 
@@ -68,6 +69,39 @@
       b.classList.toggle("active", b.dataset.color === state.accent));
     $("customDisclaimerWrap").classList.toggle("hidden", state.disclaimer !== "custom");
     $("utmCampaignWrap").classList.toggle("hidden", !state.utmEnabled);
+  }
+
+  // ---------- presets ----------
+  function getPresets() {
+    try { return JSON.parse(localStorage.getItem(PRESETS_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function setPresets(p) {
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(p));
+  }
+  function refreshPresetList() {
+    const sel = $("presetSelect");
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— load a preset —</option>' +
+      Object.keys(getPresets()).sort().map((n) => `<option>${n.replace(/[&<>"]/g, "")}</option>`).join("");
+    sel.value = current;
+  }
+
+  // Share links: signature state packed into the URL hash as base64 JSON.
+  function encodeShare() {
+    const json = JSON.stringify(state);
+    return location.origin + location.pathname + "#s=" +
+      btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function decodeShare() {
+    const m = location.hash.match(/#s=([A-Za-z0-9_-]+)/);
+    if (!m) return false;
+    try {
+      const b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+      const data = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      Object.assign(state, data);
+      history.replaceState(null, "", location.pathname);
+      return true;
+    } catch (e) { return false; }
   }
 
   // ---------- toast ----------
@@ -217,6 +251,81 @@ ${sections.join("\n")}${script}`,
       });
     });
 
+    // Presets
+    $("presetSaveBtn").addEventListener("click", () => {
+      const name = prompt("Name this signature preset:", $("presetSelect").value || "My signature");
+      if (!name) return;
+      const p = getPresets();
+      p[name] = Object.assign({}, state);
+      setPresets(p);
+      refreshPresetList();
+      $("presetSelect").value = name;
+      $("presetStatus").textContent = `✅ Saved "${name}"`;
+    });
+    $("presetSelect").addEventListener("change", (e) => {
+      const p = getPresets()[e.target.value];
+      if (!p) return;
+      Object.assign(state, p);
+      syncToForm(); render(); save();
+      $("presetStatus").textContent = `Loaded "${e.target.value}"`;
+    });
+    $("presetDeleteBtn").addEventListener("click", () => {
+      const name = $("presetSelect").value;
+      if (!name || !confirm(`Delete preset "${name}"?`)) return;
+      const p = getPresets();
+      delete p[name];
+      setPresets(p);
+      refreshPresetList();
+      $("presetStatus").textContent = `Deleted "${name}"`;
+    });
+    $("shareLinkBtn").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(encodeShare());
+      toast("Share link copied — anyone who opens it sees this signature pre-filled");
+    });
+
+    // Department presets
+    const dep = $("departmentPreset");
+    Object.entries(B.departments).forEach(([key, v]) => {
+      const o = document.createElement("option");
+      o.value = key;
+      o.textContent = v.label;
+      dep.appendChild(o);
+    });
+    dep.addEventListener("change", () => {
+      const v = B.departments[dep.value];
+      if (!v || !dep.value) return;
+      ["department", "phone", "address"].forEach((f) => {
+        if (v[f]) { state[f] = v[f]; }
+      });
+      syncToForm(); render(); save();
+    });
+
+    // Banner gallery
+    const gallery = $("bannerGallery");
+    B.banners.forEach((b) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "banner-chip";
+      btn.textContent = b.label;
+      btn.title = b.text;
+      btn.addEventListener("click", () => {
+        state.bannerText = b.text;
+        state.bannerUrl = b.url;
+        syncToForm(); render(); save();
+      });
+      gallery.appendChild(btn);
+    });
+    const clearBtn = document.createElement("button");
+    clearBtn.type = "button";
+    clearBtn.className = "banner-chip banner-chip-clear";
+    clearBtn.textContent = "✕ none";
+    clearBtn.addEventListener("click", () => {
+      state.bannerText = "";
+      state.bannerUrl = "";
+      syncToForm(); render(); save();
+    });
+    gallery.appendChild(clearBtn);
+
     // Accent swatches from brand config.
     const picker = $("accentPicker");
     B.accentChoices.forEach((c) => {
@@ -274,7 +383,16 @@ ${sections.join("\n")}${script}`,
   }
 
   load();
+  decodeShare(); // a #s= share link overrides the local draft
+  // Handoff from meetings.html: #booking=<url> pre-fills the booking button.
+  const bookingHash = location.hash.match(/#booking=(.+)/);
+  if (bookingHash) {
+    state.bookingUrl = decodeURIComponent(bookingHash[1]);
+    history.replaceState(null, "", location.pathname);
+  }
   bind();
+  refreshPresetList();
   syncToForm();
   render();
+  save();
 })();

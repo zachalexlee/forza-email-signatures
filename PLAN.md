@@ -68,8 +68,16 @@ images referenced by URL (data-URIs flagged as unreliable in Gmail).
 7. UTM tagging on links for click attribution in analytics.
 8. CSV roster → batch-generate a signature file per employee (admin "Team mode").
 
-**Phase 3 — Later / optional**
-9. Central deployment (Google Workspace / M365 APIs), hosted banner campaign rotation, real click analytics — all need a backend; revisit if needed.
+**Phase 3 — Power features (built)**
+9. Saved presets with share links, pre-designed banner gallery, scan-to-save-contact QR, department autofill.
+10. **Meeting booker** — self-hosted Calendly-style scheduling on Supabase (project `forza-email-signatures`):
+    per-rep booking pages (`book.html?u=slug`), weekly availability + slot length, double-booking blocked
+    at the database level, edit-key-guarded dashboards (`meetings.html`), .ics calendar files, and a
+    "Book a Meeting" signature button. RLS verified: guests' details and edit keys are unreadable publicly.
+
+**Phase 4 — Later / optional**
+11. Booker v2: Google/Outlook calendar sync, email confirmations + reminders, reschedule links,
+    visitor-local time zones, round-robin. Central signature deployment (Google Workspace / M365 APIs).
 
 ## 5. Acceptance checklist
 

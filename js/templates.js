@@ -76,8 +76,33 @@
   }
 
   function ctaButton(d) {
-    if (!d.ctaText || !d.ctaUrl) return "";
-    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:10px;"><tr><td style="background-color:${d.accent};border-radius:4px;"><a href="${esc(withUtm(normalizeUrl(d.ctaUrl), d))}" target="_blank" style="display:inline-block;padding:7px 16px;font-family:${FONT(d)};font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">${esc(d.ctaText)}</a></td></tr></table>`;
+    const cells = [];
+    if (d.ctaText && d.ctaUrl) {
+      cells.push(`<td style="background-color:${d.accent};border-radius:4px;"><a href="${esc(withUtm(normalizeUrl(d.ctaUrl), d))}" target="_blank" style="display:inline-block;padding:7px 16px;font-family:${FONT(d)};font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">${esc(d.ctaText)}</a></td>`);
+    }
+    if (d.bookingUrl) {
+      const sep = cells.length ? `<td style="width:8px;font-size:0;">&nbsp;</td>` : "";
+      cells.push(`${sep}<td style="background-color:${B.colors.primary};border-radius:4px;"><a href="${esc(withUtm(normalizeUrl(d.bookingUrl), d))}" target="_blank" style="display:inline-block;padding:7px 16px;font-family:${FONT(d)};font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">&#128197; Book a Meeting</a></td>`);
+    }
+    if (!cells.length) return "";
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:10px;"><tr>${cells.join("")}</tr></table>`;
+  }
+
+  function qrBlock(d) {
+    if (!d.qrEnabled) return "";
+    const vcard = [
+      "BEGIN:VCARD", "VERSION:3.0",
+      `FN:${d.fullName || ""}`,
+      d.company ? `ORG:${d.company}` : "",
+      d.jobTitle ? `TITLE:${d.jobTitle}` : "",
+      d.phone ? `TEL;TYPE=WORK:${d.phone}` : "",
+      d.mobile ? `TEL;TYPE=CELL:${d.mobile}` : "",
+      d.email ? `EMAIL:${d.email}` : "",
+      d.website ? `URL:${normalizeUrl(d.website)}` : "",
+      "END:VCARD",
+    ].filter(Boolean).join("\n");
+    const src = "https://api.qrserver.com/v1/create-qr-code/?size=132x132&data=" + encodeURIComponent(vcard);
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td style="padding:0 10px 0 0;"><img src="${esc(src)}" alt="Scan to save contact" width="66" height="66" style="display:block;border:0;width:66px;height:66px;"></td><td style="font-family:${FONT(d)};font-size:11px;color:${B.colors.muted};">Scan to save<br>my contact</td></tr></table>`;
   }
 
   function bannerBlock(d) {
@@ -143,7 +168,7 @@
     </table>
   </td>
 </tr>
-<tr><td colspan="2" style="padding:0;">${d.photoUrl ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td>${wordmark(d, { width: 110 })}</td></tr></table>` : ""}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+<tr><td colspan="2" style="padding:0;">${d.photoUrl ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td>${wordmark(d, { width: 110 })}</td></tr></table>` : ""}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
       return wrap(d, inner, 520);
     },
 
@@ -160,7 +185,7 @@
   </td>
 </tr>
 <tr><td style="padding:10px 0 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="padding:0 12px 0 0;">${wordmark(d, { width: 100 })}</td><td>${ctaButton(d)}</td></tr></table></td></tr>
-<tr><td style="padding:0;">${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
       return wrap(d, inner, 520);
     },
 
@@ -176,7 +201,7 @@
 <tr><td style="font-family:${FONT(d)};font-size:12px;line-height:18px;padding:2px 0 0;">${bits.join(sep)}</td></tr>
 <tr><td style="padding:0;">${socialRow(d)}</td></tr>
 <tr><td style="padding:0;">${ctaButton(d)}</td></tr>
-<tr><td style="padding:0;">${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
       return wrap(d, inner, 560);
     },
 
@@ -194,7 +219,7 @@
     </table>
   </td>
 </tr>
-<tr><td colspan="${d.photoUrl ? 2 : 1}" style="padding:12px 0 0;">${wordmark(d, { width: 120 })}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+<tr><td colspan="${d.photoUrl ? 2 : 1}" style="padding:12px 0 0;">${wordmark(d, { width: 120 })}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
       return wrap(d, inner, 540);
     },
   };

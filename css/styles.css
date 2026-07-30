@@ -196,3 +196,20 @@ code { background: var(--forza-light); padding: 1px 5px; border-radius: 4px; fon
   font-size: 12px;
   color: var(--forza-muted);
 }
+
+/* ---------- presets & banner gallery ---------- */
+.preset-row { align-items: center; }
+.preset-row select { width: auto; margin-top: 0; }
+.banner-gallery { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.banner-chip {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--forza-primary);
+  background: var(--forza-light);
+  border: 1px solid var(--forza-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.banner-chip:hover { border-color: var(--forza-accent); color: var(--forza-accent); }
+.banner-chip-clear { color: var(--forza-muted); }

@@ -1,0 +1,30 @@
+/* Meeting booker pages (book.html, meetings.html) */
+.book-layout { max-width: 760px; margin: 0 auto; padding: 24px 20px; }
+.book-msg { text-align: center; font-size: 15px; line-height: 1.7; }
+.book-error { color: var(--forza-accent); font-weight: bold; margin-top: 8px; }
+.chosen-slot { font-weight: bold; color: var(--forza-primary); background: var(--forza-light); border-left: 4px solid var(--forza-accent); padding: 10px 14px; border-radius: 4px; }
+
+.day-head { font-size: 14px; color: var(--forza-primary); margin: 18px 0 8px; }
+.slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.slot-btn {
+  padding: 10px 6px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--forza-accent);
+  background: #fff;
+  border: 1px solid var(--forza-accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.slot-btn:hover { background: var(--forza-accent); color: #fff; }
+
+.avail-head { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--forza-primary); margin: 18px 0 8px; }
+.avail-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.avail-row .avail-day { display: flex; align-items: center; gap: 6px; width: 120px; font-weight: normal; color: var(--forza-text); margin: 0; }
+.avail-row input[type="time"] { width: auto; margin: 0; }
+.avail-row span { color: var(--forza-muted); font-size: 12px; }
+
+.slug-row { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.btn-small { padding: 4px 10px; font-size: 12px; }
+.booking-item { padding: 10px 0; border-bottom: 1px solid var(--forza-border); font-size: 13px; color: var(--forza-text); }
+.booking-item:last-child { border-bottom: 0; }
