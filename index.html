@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forza Payments — Email Signature Builder</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="icon" href="assets/forza-logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="topbar">
+  <img src="assets/forza-logo.svg" alt="Forza Payments" class="topbar-logo">
+  <div>
+    <h1>Email Signature Builder</h1>
+    <p>Create your on-brand Forza Payments signature, then copy it into Gmail, Outlook, or Apple Mail.</p>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ===================== EDITOR ===================== -->
+  <section class="editor" aria-label="Signature editor">
+
+    <div class="panel">
+      <h2>1. Choose a template</h2>
+      <div class="template-picker" id="templatePicker">
+        <button type="button" data-template="classic" class="active">Classic</button>
+        <button type="button" data-template="modern">Modern</button>
+        <button type="button" data-template="compact">Compact</button>
+        <button type="button" data-template="executive">Executive</button>
+      </div>
+      <label class="inline-label">Accent color
+        <span class="accent-picker" id="accentPicker"></span>
+      </label>
+    </div>
+
+    <div class="panel">
+      <h2>2. Your details</h2>
+      <div class="grid-2">
+        <label>Full name <input id="fullName" placeholder="Alex Rivera"></label>
+        <label>Job title <input id="jobTitle" placeholder="Account Executive"></label>
+        <label>Department <input id="department" placeholder="Merchant Services"></label>
+        <label>Company <input id="company" value="Forza Payments"></label>
+        <label>Office phone <input id="phone" placeholder="(888) 302-3401"></label>
+        <label>Mobile phone <input id="mobile" placeholder="(253) 555-0100"></label>
+        <label>Email <input id="email" type="email" placeholder="alex@forzaatm.com"></label>
+        <label>Website <input id="website" value="forzaatm.com"></label>
+      </div>
+      <label>Office address <input id="address" placeholder="5726 100th St SW Ste B, Lakewood, WA 98499"></label>
+    </div>
+
+    <div class="panel">
+      <h2>3. Images</h2>
+      <div class="grid-2">
+        <label>Headshot URL <input id="photoUrl" placeholder="https://…/you.jpg"></label>
+        <label>Logo URL <input id="logoUrl" placeholder="https://forzaatm.com/…/logo.png"></label>
+      </div>
+      <p class="hint">Use hosted image URLs (e.g. from your website). Leave the logo blank to use the built-in FORZA text wordmark, which renders in every email client. Uploaded/base64 images are often blocked by Gmail and Outlook, so this builder only accepts URLs.</p>
+    </div>
+
+    <div class="panel">
+      <h2>4. Social links</h2>
+      <div class="grid-2">
+        <label>LinkedIn <input id="linkedin" placeholder="linkedin.com/in/you"></label>
+        <label>X / Twitter <input id="twitter" placeholder="x.com/forza"></label>
+        <label>Facebook <input id="facebook" placeholder="facebook.com/forza"></label>
+        <label>Instagram <input id="instagram" placeholder="instagram.com/forza"></label>
+        <label>YouTube <input id="youtube" placeholder="youtube.com/@forza"></label>
+        <label class="checkbox-label"><input type="checkbox" id="monoSocial"> Monochrome icons (accent color)</label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>5. Call to action &amp; banner</h2>
+      <div class="grid-2">
+        <label>Button text <input id="ctaText" placeholder="Get a Free ATM Quote"></label>
+        <label>Button link <input id="ctaUrl" placeholder="forzaatm.com/quote"></label>
+        <label>Banner text <input id="bannerText" placeholder="24/7 support • 2,000+ customers nationwide"></label>
+        <label>Banner link (optional) <input id="bannerUrl" placeholder="forzaatm.com"></label>
+      </div>
+      <label class="checkbox-label"><input type="checkbox" id="utmEnabled"> Add UTM tracking tags to links (see clicks in your web analytics)</label>
+      <label id="utmCampaignWrap" class="hidden">Campaign name <input id="utmCampaign" placeholder="forza-signature"></label>
+    </div>
+
+    <div class="panel">
+      <h2>6. Legal disclaimer</h2>
+      <label>Preset
+        <select id="disclaimer">
+          <option value="none">None</option>
+          <option value="confidentiality">Confidentiality notice</option>
+          <option value="environment">Environmental note</option>
+          <option value="full">Full legal (confidentiality + company)</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </label>
+      <label id="customDisclaimerWrap" class="hidden">Custom text <textarea id="customDisclaimer" rows="3"></textarea></label>
+    </div>
+
+    <div class="panel">
+      <h2>Team mode (admin)</h2>
+      <p class="hint">Batch-generate signatures for the whole team from a CSV with headers:
+      <code>fullName,jobTitle,department,email,phone,mobile</code>. Everyone gets the template and
+      branding configured above.</p>
+      <div class="row-buttons">
+        <button type="button" class="btn secondary" id="csvTemplateBtn">Download CSV template</button>
+        <label class="btn secondary file-btn">Upload roster CSV<input type="file" id="csvUpload" accept=".csv" hidden></label>
+      </div>
+      <div id="csvStatus" class="hint"></div>
+    </div>
+  </section>
+
+  <!-- ===================== PREVIEW ===================== -->
+  <section class="preview-pane" aria-label="Signature preview">
+    <div class="preview-toolbar">
+      <h2>Live preview</h2>
+      <div class="toggles">
+        <button type="button" id="darkToggle" class="toggle" title="Preview on dark background">🌙 Dark</button>
+        <button type="button" id="mobileToggle" class="toggle" title="Preview at phone width">📱 Mobile</button>
+      </div>
+    </div>
+
+    <div class="email-mock" id="emailMock">
+      <div class="email-mock-header">
+        <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+        <span class="mock-title">New message</span>
+      </div>
+      <div class="email-mock-body" id="emailMockBody">
+        <p class="mock-text">Hi Jordan,</p>
+        <p class="mock-text">Great speaking with you today — here's the info we discussed.</p>
+        <p class="mock-text">Best,</p>
+        <div id="signaturePreview"></div>
+      </div>
+    </div>
+
+    <div class="row-buttons export-row">
+      <button type="button" class="btn primary" id="copyRichBtn">📋 Copy signature</button>
+      <button type="button" class="btn secondary" id="copyHtmlBtn">&lt;/&gt; Copy HTML</button>
+      <button type="button" class="btn secondary" id="downloadBtn">⬇ Download .html</button>
+      <button type="button" class="btn ghost" id="resetBtn">Reset form</button>
+    </div>
+    <div id="toast" class="toast" role="status"></div>
+
+    <div class="guides">
+      <h2>Install your signature</h2>
+      <details>
+        <summary>Gmail</summary>
+        <ol>
+          <li>Click <b>Copy signature</b> above.</li>
+          <li>In Gmail, open <b>⚙ Settings → See all settings → General</b>.</li>
+          <li>Under <b>Signature</b>, click <b>Create new</b>, name it, and paste (Ctrl/Cmd+V) into the box.</li>
+          <li>Set it as the default for new emails and replies, then <b>Save Changes</b> at the bottom.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Outlook (new Outlook &amp; web)</summary>
+        <ol>
+          <li>Click <b>Copy signature</b> above.</li>
+          <li>Go to <b>Settings → Account → Signatures</b>.</li>
+          <li>Create a new signature, paste into the editor, and select it under default signatures.</li>
+          <li>Click <b>Save</b>.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Outlook (classic desktop)</summary>
+        <ol>
+          <li>Click <b>Copy signature</b> above.</li>
+          <li>Open <b>File → Options → Mail → Signatures…</b></li>
+          <li>Click <b>New</b>, name it, paste into the edit box, and choose it for new messages and replies.</li>
+          <li>Click <b>OK</b>.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Apple Mail (Mac)</summary>
+        <ol>
+          <li>Click <b>Copy signature</b> above.</li>
+          <li>Open <b>Mail → Settings → Signatures</b>, pick your account, and click <b>+</b>.</li>
+          <li>Uncheck <b>Always match my default message font</b>, then paste into the signature area.</li>
+          <li>Drag the signature onto your account and select it in the composer.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>iPhone / iPad</summary>
+        <ol>
+          <li>Email yourself a message containing the signature (or open this page on your phone and copy).</li>
+          <li>Select and copy the signature from the received email.</li>
+          <li>Open <b>Settings → Mail → Signature</b> and paste. If formatting drops, shake the device and tap <b>Undo</b> to restore rich formatting.</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  Forza Payments — internal tool. Branding is configured in <code>js/brand.js</code>.
+</footer>
+
+<script src="js/brand.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
