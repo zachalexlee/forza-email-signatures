@@ -1,10 +1,9 @@
 /*
  * Forza Payments brand configuration.
  *
- * ⚠️ PROVISIONAL PALETTE: the build environment could not reach forzaatm.com,
- * so these are placeholder finance-brand values. Replace the hex codes and
- * logoUrl with the real ones from forzaatm.com — every template and the app
- * chrome read from this object (and the matching CSS variables in styles.css).
+ * Colors extracted from the official Forza Payments logo (red/black).
+ * Every template and the app chrome read from this object (plus the
+ * matching CSS variables in styles.css).
  */
 const FORZA_BRAND = {
   companyName: "Forza Payments",
@@ -13,26 +12,26 @@ const FORZA_BRAND = {
   websiteDisplay: "forzapayments.com",
   phone: "(888) 302-3401",
 
-  // Hosted logo for use inside signatures. Leave "" to use the text wordmark,
-  // which renders reliably in every email client.
-  logoUrl: "",
+  // Hosted logo used inside signatures (must be a public URL — email clients
+  // block embedded images). Served from this app's own deployment.
+  logoUrl: "https://forza-email-signatures.vercel.app/assets/forza-logo.png",
 
   colors: {
-    primary: "#0A2743",   // deep navy — headings, name
-    accent: "#0E9F5B",    // cash green — links, accents, CTA
-    accentDark: "#0B7A46",
-    text: "#3D4852",      // body text
-    muted: "#8795A1",     // secondary text, separators
-    light: "#F1F5F8",     // banner background
+    primary: "#1C1C1C",   // Forza black — headings, name
+    accent: "#D00F10",    // Forza red — links, accents, CTA
+    accentDark: "#A50C0D",
+    text: "#3D4145",      // body text
+    muted: "#8A8F94",     // secondary text, separators
+    light: "#F6F6F6",     // banner background
     white: "#FFFFFF",
   },
 
   // Accent choices offered in the builder (all stay on-brand).
   accentChoices: [
-    { name: "Forza Green", value: "#0E9F5B" },
-    { name: "Navy", value: "#0A2743" },
-    { name: "Steel Blue", value: "#2C6E9B" },
-    { name: "Gold", value: "#C8A24B" },
+    { name: "Forza Red", value: "#D00F10" },
+    { name: "Black", value: "#1C1C1C" },
+    { name: "Charcoal", value: "#55595E" },
+    { name: "Dark Red", value: "#A50C0D" },
   ],
 
   fonts: {

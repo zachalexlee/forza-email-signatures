@@ -22,19 +22,17 @@ See [PLAN.md](PLAN.md) for the research and build plan.
 - **Autosave** — drafts persist in the browser (localStorage)
 - **Team mode** — upload a CSV roster, get one file with a ready-to-copy signature per employee
 
-## Updating the branding
+## Branding
 
-Everything brand-related lives in **`js/brand.js`**:
-
-1. Replace the provisional hex codes in `colors` (and the matching CSS variables at the top of
-   `css/styles.css`) with the exact values from forzaatm.com.
-2. Set `logoUrl` to a hosted logo image (e.g. the logo file on forzaatm.com). Until then,
-   signatures use a text-based FORZA wordmark that renders in every client.
-3. `assets/forza-logo.svg` is a recreated placeholder wordmark used in the app header — swap it
-   for the official file.
+Everything brand-related lives in **`js/brand.js`** (mirrored as CSS variables at the top of
+`css/styles.css`). The palette — Forza Red `#D00F10` on black `#1C1C1C` — was extracted from the
+official logo, and the official logo files live in `assets/` (`forza-logo.png`,
+`forza-logo-white-bg.png`, `forza-icon.png`). Signatures reference the logo at its hosted URL,
+`https://forza-email-signatures.vercel.app/assets/forza-logo.png`.
 
 > Why hosted logo URLs? Gmail and Outlook strip or block embedded (base64) images, so signature
-> images must be publicly hosted.
+> images must be publicly hosted. If the app moves to a different domain, update `logoUrl` in
+> `js/brand.js`.
 
 ## Running locally
 

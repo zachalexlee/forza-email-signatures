@@ -1,14 +1,14 @@
 /* Forza Payments signature builder — app chrome styles.
    Brand palette mirrors js/brand.js; update both together. */
 :root {
-  --forza-primary: #0A2743;
-  --forza-accent: #0E9F5B;
-  --forza-accent-dark: #0B7A46;
-  --forza-text: #3D4852;
-  --forza-muted: #8795A1;
-  --forza-light: #F1F5F8;
-  --forza-border: #DDE4EA;
-  --forza-bg: #F7F9FB;
+  --forza-primary: #1C1C1C;
+  --forza-accent: #D00F10;
+  --forza-accent-dark: #A50C0D;
+  --forza-text: #3D4145;
+  --forza-muted: #8A8F94;
+  --forza-light: #F6F6F6;
+  --forza-border: #E2E2E2;
+  --forza-bg: #F8F8F8;
   --radius: 10px;
 }
 

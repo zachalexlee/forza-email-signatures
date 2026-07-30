@@ -92,7 +92,7 @@
   function disclaimerBlock(d) {
     const text = d.disclaimer === "custom" ? d.customDisclaimer : B.disclaimers[d.disclaimer];
     if (!text) return "";
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="font-family:${FONT(d)};font-size:10px;line-height:14px;color:${B.colors.muted};border-top:1px solid #E1E5EA;padding-top:8px;">${esc(text)}</td></tr></table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="font-family:${FONT(d)};font-size:10px;line-height:14px;color:${B.colors.muted};border-top:1px solid #E2E2E2;padding-top:8px;">${esc(text)}</td></tr></table>`;
   }
 
   function contactLines(d, opts = {}) {

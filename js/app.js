@@ -31,6 +31,10 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       Object.assign(state, JSON.parse(raw));
+      // Drafts saved under an older palette get snapped back to brand colors.
+      if (!B.accentChoices.some((c) => c.value === state.accent)) {
+        state.accent = B.colors.accent;
+      }
     } catch (e) {}
   }
 
@@ -164,9 +168,9 @@
     const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
     const sections = people.map((p, i) => {
       const d = Object.assign({}, state, p);
-      return `<div style="border:1px solid #DDE4EA;border-radius:10px;margin:0 0 24px;overflow:hidden;">
-<div style="background:#0A2743;color:#fff;padding:10px 16px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">
-${esc(p.fullName)} <button onclick="copySig(${i})" style="float:right;background:#0E9F5B;color:#fff;border:0;border-radius:4px;padding:4px 12px;cursor:pointer;font-weight:bold;">Copy</button></div>
+      return `<div style="border:1px solid #E2E2E2;border-radius:10px;margin:0 0 24px;overflow:hidden;">
+<div style="background:#1C1C1C;color:#fff;padding:10px 16px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">
+${esc(p.fullName)} <button onclick="copySig(${i})" style="float:right;background:#D00F10;color:#fff;border:0;border-radius:4px;padding:4px 12px;cursor:pointer;font-weight:bold;">Copy</button></div>
 <div id="sig-${i}" style="padding:20px;background:#fff;">${currentHtml(d)}</div></div>`;
     });
 
@@ -175,8 +179,8 @@ function copySig(i){var n=document.getElementById('sig-'+i);var r=document.creat
 </scr` + `ipt>`;
 
     const page = docWrap(
-      `<h1 style="font-family:Arial,sans-serif;color:#0A2743;">Forza Payments — Team Signatures</h1>
-<p style="font-family:Arial,sans-serif;color:#3D4852;">Send each person this file (or their section). They click <b>Copy</b>, then paste into their email client's signature settings.</p>
+      `<h1 style="font-family:Arial,sans-serif;color:#1C1C1C;">Forza Payments — Team Signatures</h1>
+<p style="font-family:Arial,sans-serif;color:#3D4145;">Send each person this file (or their section). They click <b>Copy</b>, then paste into their email client's signature settings.</p>
 ${sections.join("\n")}${script}`,
       "Forza Team Signatures"
     );

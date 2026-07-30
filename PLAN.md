@@ -42,12 +42,10 @@ Sources: [MySignature comparison](https://mysignature.io/blog/best-email-signatu
 
 - **Company**: Forza Payments (Forza ATM) — merchant services & ATM processing, 30+ years in the ATM business, 2,000+ customers, 24/7 support — (888) 302-3401, forzaatm.com / forzapayments.com.
 - **Palette + logo**: defined in one place, `js/brand.js` (mirrored as CSS variables in `css/styles.css`).
-  > ⚠️ The build sandbox's network policy blocked forzaatm.com, so the palette shipped here is a
-  > provisional finance palette (deep navy `#0A2743`, cash green `#0E9F5B`, slate/gray neutrals) and the
-  > logo is a recreated **FORZA PAYMENTS** wordmark (`assets/forza-logo.svg`). Swap in the exact hex
-  > codes and the hosted logo URL from forzaatm.com in `js/brand.js` — every template picks them up.
-- Signatures default to a **text-based wordmark** (renders in every email client); a hosted logo URL
-  replaces it when provided.
+  Palette is Forza Red `#D00F10` + black `#1C1C1C`, extracted from the official logo files supplied by
+  the user (the sandbox's network policy blocked fetching forzaatm.com directly). Official logo assets
+  live in `assets/`; signatures reference the hosted copy on the app's own deployment.
+- If no logo URL is set, signatures fall back to a **text-based wordmark** (renders in every email client).
 
 ## 3. Architecture
 
