@@ -4,13 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Book a Meeting — Forza Payments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:ital,wght@0,600;0,700;1,600;1,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/booker.css">
-<link rel="icon" href="assets/forza-icon.png" type="image/png">
+<link rel="icon" href="assets/brand/icon-32.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/brand/icon-180.png">
 </head>
 <body>
 <header class="topbar">
-  <a href="https://forzapayments.com" target="_blank"><img src="assets/forza-logo.png" alt="Forza Payments" class="topbar-logo"></a>
+  <a href="https://forzapayments.com" target="_blank"><img src="assets/brand/forza-lockup-dark.png" alt="Forza Payments" class="topbar-logo"></a>
   <div>
     <h1 id="pageTitle">Book a Meeting</h1>
     <p id="pageSub">Pick a time that works for you.</p>
@@ -51,10 +55,10 @@
 
   <section id="done" class="hidden">
     <div class="panel book-msg">
-      <h2>✅ You're booked!</h2>
+      <h2>You&#8217;re booked.</h2>
       <p id="doneDetails"></p>
       <div class="row-buttons">
-        <button type="button" class="btn primary" id="icsBtn">⬇ Add to calendar (.ics)</button>
+        <button type="button" class="btn primary" id="icsBtn">Add to calendar (.ics)</button>
       </div>
       <p class="hint">A copy of the details is in the calendar file — see you then!</p>
     </div>
@@ -68,6 +72,7 @@
 <script>
 (async function () {
   const $ = (id) => document.getElementById(id);
+  if (new URLSearchParams(location.search).get("embed")) document.body.classList.add("embed");
   const slug = new URLSearchParams(location.search).get("u");
   let booker = null, chosen = null;
 

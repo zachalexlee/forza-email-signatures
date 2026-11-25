@@ -1,48 +1,50 @@
 /*
  * Forza Payments brand configuration.
- *
- * Colors extracted from the official Forza Payments logo (red/black).
- * Every template and the app chrome read from this object (plus the
- * matching CSS variables in styles.css).
+ * Sourced from the Forza Payments Design System (claude.ai artifact, Nov 2026):
+ * tokens.json palette, Rajdhani/Inter type, official logo assets, and the
+ * design system's email-signature spec.
  */
 const FORZA_BRAND = {
-  companyName: "Forza Payments",
-  tagline: "ATM & Merchant Services",
+  companyName: "Forza Payments, Inc.",
+  companyShort: "Forza Payments",
+  tagline: "Merchant services & ATM solutions · 30+ years · Nationwide placement and 24/7 support",
   website: "https://forzapayments.com",
   websiteDisplay: "forzapayments.com",
   phone: "(888) 302-3401",
 
-  // Hosted logo used inside signatures (must be a public URL — email clients
-  // block embedded images). Served from this app's own deployment.
-  logoUrl: "https://forza-email-signatures.vercel.app/assets/forza-logo.png",
+  // Official logo assets, hosted by this app's own deployment.
+  // Per the design system: signatures use the FP mark, never the full lockup.
+  logoUrl: "https://forza-email-signatures.vercel.app/assets/brand/forza-f-mark.png",
+  lockupUrl: "https://forza-email-signatures.vercel.app/assets/brand/forza-lockup.png",
 
   colors: {
-    primary: "#1C1C1C",   // Forza black — headings, name
-    accent: "#D00F10",    // Forza red — links, accents, CTA
-    accentDark: "#A50C0D",
-    text: "#3D4145",      // body text
-    muted: "#8A8F94",     // secondary text, separators
-    light: "#F6F6F6",     // banner background
+    primary: "#111111",    // carbon — headings, name
+    accent: "#F00411",     // Forza red — the one loud color
+    accentDark: "#C9000B", // red-600 hover
+    text: "#4B5563",       // body text (neutral-600)
+    muted: "#6B7280",      // labels, separators (neutral-500)
+    faint: "#9CA3AF",      // taglines, disclaimers (neutral-400)
+    light: "#F4F5F7",      // paper
+    border: "#E5E7EB",     // neutral-200 hairline
     white: "#FFFFFF",
   },
 
-  // Accent choices offered in the builder (all stay on-brand).
   accentChoices: [
-    { name: "Forza Red", value: "#D00F10" },
-    { name: "Black", value: "#1C1C1C" },
-    { name: "Charcoal", value: "#55595E" },
-    { name: "Dark Red", value: "#A50C0D" },
+    { name: "Forza Red", value: "#F00411" },
+    { name: "Carbon", value: "#111111" },
+    { name: "Deep Red", value: "#9B0008" },
+    { name: "Slate", value: "#4B5563" },
   ],
 
   fonts: {
-    sans: "Arial, Helvetica, sans-serif",
+    sans: "'Inter', Arial, Helvetica, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
   },
 
-  // Font choices for the builder. Email-safe stacks only — web fonts don't
-  // load in most email clients, so anything fancier falls back unpredictably.
+  // Email-safe stacks only — web fonts don't load in most email clients.
   fontChoices: [
     { name: "Template default", stack: "" },
+    { name: "Inter / Arial (brand)", stack: "'Inter', Arial, Helvetica, sans-serif" },
     { name: "Arial (clean sans)", stack: "Arial, Helvetica, sans-serif" },
     { name: "Helvetica", stack: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
     { name: "Verdana (wide sans)", stack: "Verdana, Geneva, sans-serif" },
@@ -51,23 +53,22 @@ const FORZA_BRAND = {
     { name: "Georgia (modern serif)", stack: "Georgia, 'Times New Roman', serif" },
     { name: "Palatino (elegant serif)", stack: "'Palatino Linotype', 'Book Antiqua', Palatino, serif" },
     { name: "Times New Roman (classic serif)", stack: "'Times New Roman', Times, serif" },
-    { name: "Courier New (typewriter)", stack: "'Courier New', Courier, monospace" },
   ],
 
   // Where personal booking pages live (meeting booker).
   bookingBase: "https://forza-email-signatures.vercel.app/book.html",
+  embedBase: "https://forza-email-signatures.vercel.app",
 
-  // Pre-designed banner gallery. An admin can rotate the whole team's promo
-  // by editing this list — the builder shows these as one-click choices.
+  // Pre-designed banner gallery — voice per the brand book: short declaratives,
+  // hard numbers, verb-forward CTAs, no emoji.
   banners: [
-    { label: "Free ATM quote", text: "Get a Free ATM Quote — hassle-free install & 24/7 support", url: "https://forzapayments.com" },
-    { label: "2,000+ customers", text: "Trusted by 2,000+ businesses nationwide • 30+ years in ATMs", url: "https://forzapayments.com" },
-    { label: "24/7 support", text: "24/7 support line • 4 regional support centers", url: "https://forzapayments.com" },
-    { label: "Card processing", text: "Now offering credit card processing for retail & restaurants", url: "https://forzapayments.com" },
-    { label: "Referral", text: "Refer a business, earn a bonus — ask me how", url: "https://forzapayments.com" },
+    { label: "Free ATM quote", text: "Get a free ATM quote — free shipping and installation", url: "https://forzapayments.com" },
+    { label: "Surcharge revenue", text: "Your ATM should earn for you, not for the provider", url: "https://forzapayments.com" },
+    { label: "2,000+ customers", text: "2,000+ customers nationwide. 30+ years in the ATM business.", url: "https://forzapayments.com" },
+    { label: "24/7 support", text: "24/7 support. 4 regional support centers.", url: "https://forzapayments.com" },
+    { label: "7-10 days", text: "Receive and start using your new ATM within 7-10 business days", url: "https://forzapayments.com" },
   ],
 
-  // Department presets — one click fills shared contact details.
   departments: {
     "": { label: "— none —" },
     sales: { label: "ATM Sales", department: "ATM Sales", phone: "(888) 302-3401", address: "5726 100th St SW Ste B, Lakewood, WA 98499" },
@@ -83,6 +84,6 @@ const FORZA_BRAND = {
     environment:
       "Please consider the environment before printing this email.",
     full:
-      "CONFIDENTIALITY NOTICE: This email and any attachments are intended solely for the addressee and may contain confidential or privileged information. Any unauthorized review, use, disclosure, or distribution is prohibited. If you received this in error, please notify the sender and delete all copies. Forza Payments Inc. | Lakewood, WA",
+      "CONFIDENTIALITY NOTICE: This email and any attachments are intended solely for the addressee and may contain confidential or privileged information. Any unauthorized review, use, disclosure, or distribution is prohibited. If you received this in error, please notify the sender and delete all copies. Forza Payments, Inc. | Lakewood, WA",
   },
 };

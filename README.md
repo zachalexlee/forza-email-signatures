@@ -33,10 +33,14 @@ See [PLAN.md](PLAN.md) for the research and build plan.
 ## Branding
 
 Everything brand-related lives in **`js/brand.js`** (mirrored as CSS variables at the top of
-`css/styles.css`). The palette — Forza Red `#D00F10` on black `#1C1C1C` — was extracted from the
-official logo, and the official logo files live in `assets/` (`forza-logo.png`,
-`forza-logo-white-bg.png`, `forza-icon.png`). Signatures reference the logo at its hosted URL,
-`https://forza-email-signatures.vercel.app/assets/forza-logo.png`.
+`css/styles.css`), sourced from the **Forza Payments Design System** (claude.ai artifact):
+Forza Red `#F00411` on Carbon `#111111`, paper `#F4F5F7`, Rajdhani display / Inter body type,
+4px buttons and 8px cards. Official logo assets live in `assets/brand/` (lockups light/dark,
+FP marks light/dark, favicons). Per the design system's email-signature spec, signatures use the
+FP mark at `https://forza-email-signatures.vercel.app/assets/brand/forza-f-mark.png` — never the
+full lockup. The default "Forza" and "Forza Compact" templates implement the spec exactly
+(3px red divider, D/M/E/W contact rows, company tagline). Legacy assets in `assets/` are kept so
+signatures already in the wild keep their images.
 
 > Why hosted logo URLs? Gmail and Outlook strip or block embedded (base64) images, so signature
 > images must be publicly hosted. If the app moves to a different domain, update `logoUrl` in

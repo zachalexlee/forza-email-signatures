@@ -16,7 +16,7 @@
   const $ = (id) => document.getElementById(id);
 
   const state = {
-    template: "classic",
+    template: "forza",
     accent: B.colors.accent,
     disclaimer: "none",
     font: "",
@@ -204,9 +204,9 @@
     const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
     const sections = people.map((p, i) => {
       const d = Object.assign({}, state, p);
-      return `<div style="border:1px solid #E2E2E2;border-radius:10px;margin:0 0 24px;overflow:hidden;">
-<div style="background:#1C1C1C;color:#fff;padding:10px 16px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">
-${esc(p.fullName)} <button onclick="copySig(${i})" style="float:right;background:#D00F10;color:#fff;border:0;border-radius:4px;padding:4px 12px;cursor:pointer;font-weight:bold;">Copy</button></div>
+      return `<div style="border:1px solid #E5E7EB;border-radius:10px;margin:0 0 24px;overflow:hidden;">
+<div style="background:#111111;color:#fff;padding:10px 16px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">
+${esc(p.fullName)} <button onclick="copySig(${i})" style="float:right;background:#F00411;color:#fff;border:0;border-radius:4px;padding:4px 12px;cursor:pointer;font-weight:bold;">Copy</button></div>
 <div id="sig-${i}" style="padding:20px;background:#fff;">${currentHtml(d)}</div></div>`;
     });
 
@@ -215,7 +215,7 @@ function copySig(i){var n=document.getElementById('sig-'+i);var r=document.creat
 </scr` + `ipt>`;
 
     const page = docWrap(
-      `<h1 style="font-family:Arial,sans-serif;color:#1C1C1C;">Forza Payments — Team Signatures</h1>
+      `<h1 style="font-family:Arial,sans-serif;color:#111111;">Forza Payments — Team Signatures</h1>
 <p style="font-family:Arial,sans-serif;color:#3D4145;">Send each person this file (or their section). They click <b>Copy</b>, then paste into their email client's signature settings.</p>
 ${sections.join("\n")}${script}`,
       "Forza Team Signatures"
@@ -262,7 +262,7 @@ ${sections.join("\n")}${script}`,
       setPresets(p);
       refreshPresetList();
       $("presetSelect").value = name;
-      $("presetStatus").textContent = `✅ Saved "${name}"`;
+      $("presetStatus").textContent = `Saved "${name}"`;
     });
     $("presetSelect").addEventListener("change", (e) => {
       const p = getPresets()[e.target.value];
@@ -328,6 +328,33 @@ ${sections.join("\n")}${script}`,
     });
     gallery.appendChild(clearBtn);
 
+    // Booking popup preview + website embed snippet
+    function refreshSnippet() {
+      const el = $("embedSnippet");
+      if (!el) return;
+      let slug = "";
+      try {
+        const u = new URL(/^https?:\/\//i.test(state.bookingUrl) ? state.bookingUrl : "https://" + state.bookingUrl);
+        slug = u.searchParams.get("u") || "";
+      } catch (e) {}
+      el.textContent = slug
+        ? '<script src="' + B.embedBase + '/embed.js" data-user="' + slug + '"></scr' + 'ipt>'
+        : "Enter your booking link above to generate the snippet.";
+    }
+    $("bookingUrl").addEventListener("input", refreshSnippet);
+    refreshSnippet();
+    $("popupPreviewBtn").addEventListener("click", () => {
+      if (!state.bookingUrl) { toast("Add your booking page link first"); return; }
+      const url = /^https?:\/\//i.test(state.bookingUrl) ? state.bookingUrl : "https://" + state.bookingUrl;
+      window.ForzaBooker.open(url);
+    });
+    $("copySnippetBtn").addEventListener("click", async () => {
+      const t = $("embedSnippet").textContent;
+      if (!t.startsWith("<script")) { toast("Add your booking page link first"); return; }
+      await navigator.clipboard.writeText(t);
+      toast("Embed snippet copied — paste it into your website");
+    });
+
     // Font choices from brand config.
     const fontSel = $("fontSelect");
     B.fontChoices.forEach((f) => {
@@ -388,9 +415,9 @@ ${sections.join("\n")}${script}`,
       reader.onload = () => {
         try {
           const n = batchGenerate(reader.result);
-          $("csvStatus").textContent = `✅ Generated signatures for ${n} people — check your downloads.`;
+          $("csvStatus").textContent = `Generated signatures for ${n} people — check your downloads.`;
         } catch (err) {
-          $("csvStatus").textContent = "⚠️ " + err.message;
+          $("csvStatus").textContent = "" + err.message;
         }
         e.target.value = "";
       };

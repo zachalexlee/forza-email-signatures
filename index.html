@@ -4,12 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forza Payments — Email Signature Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:ital,wght@0,600;0,700;1,600;1,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
-<link rel="icon" href="assets/forza-icon.png" type="image/png">
+<link rel="icon" href="assets/brand/icon-32.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/brand/icon-180.png">
 </head>
 <body>
 <header class="topbar">
-  <img src="assets/forza-logo.png" alt="Forza Payments" class="topbar-logo">
+  <img src="assets/brand/forza-lockup-dark.png" alt="Forza Payments" class="topbar-logo">
   <div>
     <h1>Email Signature Builder</h1>
     <p>Create your on-brand Forza Payments signature, then copy it into Gmail, Outlook, or Apple Mail.</p>
@@ -25,8 +29,8 @@
       <div class="row-buttons preset-row">
         <select id="presetSelect" style="flex:1;min-width:140px;"><option value="">— load a preset —</option></select>
         <button type="button" class="btn secondary" id="presetSaveBtn">Save as…</button>
-        <button type="button" class="btn ghost" id="presetDeleteBtn" title="Delete selected preset">🗑</button>
-        <button type="button" class="btn secondary" id="shareLinkBtn" title="Copy a link that opens the builder pre-filled with this signature">🔗 Share link</button>
+        <button type="button" class="btn ghost" id="presetDeleteBtn" title="Delete selected preset">Delete</button>
+        <button type="button" class="btn secondary" id="shareLinkBtn" title="Copy a link that opens the builder pre-filled with this signature">Share link</button>
       </div>
       <div id="presetStatus" class="hint"></div>
     </div>
@@ -34,7 +38,9 @@
     <div class="panel">
       <h2>1. Choose a template</h2>
       <div class="template-picker" id="templatePicker">
-        <button type="button" data-template="classic" class="active">Classic</button>
+        <button type="button" data-template="forza" class="active">Forza</button>
+        <button type="button" data-template="forzacompact">Forza Compact</button>
+        <button type="button" data-template="classic">Classic</button>
         <button type="button" data-template="modern">Modern</button>
         <button type="button" data-template="compact">Compact</button>
         <button type="button" data-template="executive">Executive</button>
@@ -109,10 +115,20 @@
 
     <div class="panel">
       <h2>6. Meeting booker</h2>
-      <p class="hint">Add a <b>📅 Book a Meeting</b> button to your signature. Don't have a booking
+      <p class="hint">Add a <b>Book a Meeting</b> button to your signature. Don't have a booking
       page yet? <a href="meetings.html" target="_blank">Create yours here</a> — pick your weekly
       availability and get a personal link like <code>book.html?u=your-name</code>.</p>
       <label>Your booking page link <input id="bookingUrl" placeholder="https://forza-email-signatures.vercel.app/book.html?u=alex"></label>
+      <div class="row-buttons">
+        <button type="button" class="btn dark" id="popupPreviewBtn">Preview booking popup</button>
+      </div>
+      <p class="hint" style="margin-top:12px;"><b>Website popup widget</b> — put this on forzapayments.com (or any site)
+      and visitors get a scheduling popup without leaving the page. Email clients don't run scripts, so
+      the signature button opens your booking page in a new tab — on your website, it pops up.</p>
+      <code class="snippet" id="embedSnippet">Enter your booking link above to generate the snippet.</code>
+      <div class="row-buttons">
+        <button type="button" class="btn secondary" id="copySnippetBtn">Copy snippet</button>
+      </div>
     </div>
 
     <div class="panel">
@@ -147,8 +163,8 @@
     <div class="preview-toolbar">
       <h2>Live preview</h2>
       <div class="toggles">
-        <button type="button" id="darkToggle" class="toggle" title="Preview on dark background">🌙 Dark</button>
-        <button type="button" id="mobileToggle" class="toggle" title="Preview at phone width">📱 Mobile</button>
+        <button type="button" id="darkToggle" class="toggle" title="Preview on dark background">Dark</button>
+        <button type="button" id="mobileToggle" class="toggle" title="Preview at phone width">Mobile</button>
       </div>
     </div>
 
@@ -166,9 +182,9 @@
     </div>
 
     <div class="row-buttons export-row">
-      <button type="button" class="btn primary" id="copyRichBtn">📋 Copy signature</button>
+      <button type="button" class="btn primary" id="copyRichBtn">Copy signature</button>
       <button type="button" class="btn secondary" id="copyHtmlBtn">&lt;/&gt; Copy HTML</button>
-      <button type="button" class="btn secondary" id="downloadBtn">⬇ Download .html</button>
+      <button type="button" class="btn secondary" id="downloadBtn">Download .html</button>
       <button type="button" class="btn ghost" id="resetBtn">Reset form</button>
     </div>
     <div id="toast" class="toast" role="status"></div>
@@ -229,6 +245,7 @@
 
 <script src="js/brand.js"></script>
 <script src="js/templates.js"></script>
+<script src="embed.js" data-mode="none"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -66,10 +66,13 @@
   function wordmark(d, opts = {}) {
     const logoUrl = d.logoUrl || B.logoUrl;
     if (logoUrl) {
-      return `<a href="${esc(withUtm(normalizeUrl(d.website || B.website), d))}" target="_blank"><img src="${esc(logoUrl)}" alt="${esc(B.companyName)}" width="${opts.width || 120}" style="display:block;border:0;max-width:${opts.width || 120}px;height:auto;"></a>`;
+      // Design-system rule: the FP mark in signatures, never the full lockup
+      // (the wordmark is unreadable at signature scale). Mark is ~2:1.
+      const w = Math.min(opts.width || 86, 96);
+      return `<a href="${esc(withUtm(normalizeUrl(d.website || B.website), d))}" target="_blank"><img src="${esc(logoUrl)}" alt="${esc(B.companyShort || B.companyName)}" width="${w}" style="display:block;border:0;width:${w}px;height:auto;"></a>`;
     }
     // Text wordmark fallback — renders everywhere.
-    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:${opts.big ? 24 : 20}px;font-weight:bold;color:${B.colors.primary};letter-spacing:1px;">FORZA</td></tr><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;color:${d.accent};letter-spacing:4px;">PAYMENTS</td></tr></table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:${opts.big ? 24 : 20}px;font-weight:bold;font-style:italic;color:${B.colors.primary};letter-spacing:1px;">FORZA</td></tr><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;color:${d.accent};letter-spacing:4px;">PAYMENTS</td></tr></table>`;
   }
 
   function photoCell(d, size) {
@@ -84,7 +87,7 @@
     }
     if (d.bookingUrl) {
       const sep = cells.length ? `<td style="width:8px;font-size:0;">&nbsp;</td>` : "";
-      cells.push(`${sep}<td style="background-color:${B.colors.primary};border-radius:4px;"><a href="${esc(withUtm(normalizeUrl(d.bookingUrl), d))}" target="_blank" style="display:inline-block;padding:7px 16px;font-family:${FONT(d)};font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">&#128197; Book a Meeting</a></td>`);
+      cells.push(`${sep}<td style="background-color:${B.colors.primary};border-radius:4px;"><a href="${esc(withUtm(normalizeUrl(d.bookingUrl), d))}" target="_blank" style="display:inline-block;padding:7px 16px;font-family:${FONT(d)};font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Book a Meeting</a></td>`);
     }
     if (!cells.length) return "";
     return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:10px;"><tr>${cells.join("")}</tr></table>`;
@@ -119,7 +122,7 @@
   function disclaimerBlock(d) {
     const text = d.disclaimer === "custom" ? d.customDisclaimer : B.disclaimers[d.disclaimer];
     if (!text) return "";
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="font-family:${FONT(d)};font-size:10px;line-height:14px;color:${B.colors.muted};border-top:1px solid #E2E2E2;padding-top:8px;">${esc(text)}</td></tr></table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="font-family:${FONT(d)};font-size:10px;line-height:14px;color:${B.colors.muted};border-top:1px solid ${B.colors.border};padding-top:8px;">${esc(text)}</td></tr></table>`;
   }
 
   function contactLines(d, opts = {}) {
@@ -307,8 +310,61 @@ ${cta}${book}
     return wrap(d, inner, 560);
   };
 
+  /* ---- official design-system templates ---- */
+
+  // Flagship: straight from the design system's email-signature spec —
+  // FP mark left of a 3px red divider, D/M/E/W contact rows, tagline.
+  TEMPLATES.forza = function (d) {
+    const F = FONT(d);
+    const row = (label, html) =>
+      `<span style="color:${B.colors.muted};">${label}</span>&nbsp;&nbsp;${html}<br>`;
+    let rows = "";
+    if (d.phone) rows += row("D", link(d, "tel:" + d.phone.replace(/[^+\d]/g, ""), d.phone, { color: B.colors.text, size: 12 }));
+    if (d.mobile) rows += row("M", link(d, "tel:" + d.mobile.replace(/[^+\d]/g, ""), d.mobile, { color: B.colors.text, size: 12 }));
+    if (d.email) rows += row("E", link(d, "mailto:" + d.email, d.email, { color: B.colors.text, size: 12 }));
+    if (d.website) rows += row("W", link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size: 12 }));
+    const sub = [d.jobTitle, d.department].filter(Boolean).join(", ");
+    const inner = `
+<tr>
+  <td style="vertical-align:top;padding:2px 20px 0 0;border-right:3px solid ${d.accent};">${d.photoUrl ? photoCell(d, 86) : wordmark(d, { width: 86 })}</td>
+  <td style="vertical-align:top;padding:0 0 0 20px;font-family:${F};">
+    <div style="font-size:16px;font-weight:bold;color:${B.colors.primary};line-height:1.3;">${esc(d.fullName)}</div>
+    ${sub ? `<div style="font-size:12px;font-weight:bold;color:${d.accent};text-transform:uppercase;letter-spacing:1px;padding-top:3px;">${esc(sub)}</div>` : ""}
+    ${d.company ? `<div style="font-size:13px;font-weight:bold;color:${B.colors.primary};padding-top:9px;">${esc(d.company)}</div>` : ""}
+    <div style="font-size:12px;color:${B.colors.text};line-height:1.75;padding-top:7px;">${rows}</div>
+    ${d.address ? `<div style="font-size:11px;color:${B.colors.faint};padding-top:4px;">${esc(d.address)}</div>` : ""}
+    <div style="font-size:10.5px;color:${B.colors.faint};line-height:1.5;padding-top:12px;max-width:380px;">${esc(B.tagline)}</div>
+    ${socialRow(d)}
+    ${ctaButton(d)}
+  </td>
+</tr>
+<tr><td colspan="2" style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 540);
+  };
+
+  // The spec's compact variant — replies and mobile.
+  TEMPLATES.forzacompact = function (d) {
+    const F = FONT(d);
+    const dot = `&nbsp;<span style="color:${B.colors.faint};">·</span>&nbsp;`;
+    const bits = [];
+    if (d.phone) bits.push(link(d, "tel:" + d.phone.replace(/[^+\d]/g, ""), d.phone, { color: B.colors.text, size: 12 }));
+    if (d.email) bits.push(link(d, "mailto:" + d.email, d.email, { color: B.colors.text, size: 12 }));
+    if (d.website) bits.push(link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size: 12 }));
+    if (d.bookingUrl) bits.push(link(d, withUtm(normalizeUrl(d.bookingUrl), d), "Book a meeting", { bold: true, color: B.colors.primary, size: 12 }));
+    const inner = `
+<tr>
+  <td style="vertical-align:middle;padding:0 16px 0 0;">${d.photoUrl ? photoCell(d, 48) : wordmark(d, { width: 48 })}</td>
+  <td style="vertical-align:middle;border-left:3px solid ${d.accent};padding:2px 0 2px 16px;font-family:${F};">
+    <div style="font-size:14px;font-weight:bold;color:${B.colors.primary};">${esc(d.fullName)}${d.company ? ` <span style="font-weight:normal;color:${B.colors.faint};">·</span> <span style="font-size:12px;font-weight:bold;color:${d.accent};">${esc(d.company)}</span>` : ""}</div>
+    <div style="font-size:12px;color:${B.colors.text};padding-top:4px;">${bits.join(dot)}</div>
+  </td>
+</tr>
+<tr><td colspan="2" style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 560);
+  };
+
   window.renderSignature = function (d) {
-    const fn = TEMPLATES[d.template] || TEMPLATES.classic;
+    const fn = TEMPLATES[d.template] || TEMPLATES.forza;
     return fn(d).replace(/\n\s*/g, "");
   };
 })();
