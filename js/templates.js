@@ -1,5 +1,5 @@
 /*
- * Signature templates.
+ * Signature templates — Forza Payments design system.
  *
  * Every template returns a self-contained, email-client-safe HTML string:
  *   - table-based layout only (no divs/flex/grid — Outlook desktop uses Word's renderer)
@@ -38,41 +38,45 @@
   const SERIF_TEMPLATES = ["executive", "minimal"];
   const FONT = (d) => d.font || (SERIF_TEMPLATES.includes(d.template) ? B.fonts.serif : B.fonts.sans);
 
+  const DOT = `<span style="color:${B.colors.faint};">&nbsp;&middot;&nbsp;</span>`;
+
   function link(d, href, text, opts = {}) {
     const color = opts.color || d.accent;
     const weight = opts.bold ? "font-weight:bold;" : "";
     return `<a href="${esc(href)}" target="_blank" style="color:${color};text-decoration:none;${weight}font-family:${FONT(d)};font-size:${opts.size || 13}px;">${esc(text)}</a>`;
   }
 
-  // Letter-badge social icons: pure HTML/CSS, so they render without hosted images.
-  const SOCIALS = [
-    { key: "linkedin", label: "in", name: "LinkedIn", bg: "#0A66C2" },
-    { key: "twitter", label: "𝕏", name: "X (Twitter)", bg: "#000000" },
-    { key: "facebook", label: "f", name: "Facebook", bg: "#1877F2" },
-    { key: "instagram", label: "ig", name: "Instagram", bg: "#C13584" },
-    { key: "youtube", label: "▶", name: "YouTube", bg: "#FF0000" },
-  ];
+  function telLink(d, number, opts = {}) {
+    return link(d, "tel:" + number.replace(/[^+\d]/g, ""), number, Object.assign({ color: B.colors.text }, opts));
+  }
 
-  function socialRow(d) {
-    const cells = SOCIALS.filter((s) => d[s.key]).map((s) => {
-      const href = withUtm(normalizeUrl(d[s.key]), d);
-      const bg = d.monoSocial ? d.accent : s.bg;
-      return `<td style="padding:0 6px 0 0;"><a href="${esc(href)}" target="_blank" title="${s.name}" style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;background-color:${bg};color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;text-decoration:none;border-radius:4px;">${s.label}</a></td>`;
-    });
-    if (!cells.length) return "";
-    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:8px;"><tr>${cells.join("")}</tr></table>`;
+  /* ---------- logo ---------- */
+  // d.logoStyle: "mark" (FP monogram, default) | "lockup" (full FP Forza
+  // Payments logo) | "text" (typed fallback) | "none".
+  function logoImg(d, url, w) {
+    return `<a href="${esc(withUtm(normalizeUrl(d.website || B.website), d))}" target="_blank"><img src="${esc(url)}" alt="${esc(B.companyShort || B.companyName)}" width="${w}" style="display:block;border:0;width:${w}px;height:auto;"></a>`;
+  }
+
+  function textWordmark(d, big) {
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:${big ? 24 : 20}px;font-weight:bold;font-style:italic;color:${B.colors.primary};letter-spacing:1px;">FORZA</td></tr><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;color:${d.accent};letter-spacing:4px;">PAYMENTS</td></tr></table>`;
   }
 
   function wordmark(d, opts = {}) {
-    const logoUrl = d.logoUrl || B.logoUrl;
-    if (logoUrl) {
-      // Design-system rule: the FP mark in signatures, never the full lockup
-      // (the wordmark is unreadable at signature scale). Mark is ~2:1.
-      const w = Math.min(opts.width || 86, 96);
-      return `<a href="${esc(withUtm(normalizeUrl(d.website || B.website), d))}" target="_blank"><img src="${esc(logoUrl)}" alt="${esc(B.companyShort || B.companyName)}" width="${w}" style="display:block;border:0;width:${w}px;height:auto;"></a>`;
+    const style = d.logoStyle || "mark";
+    if (style === "none") return "";
+    if (style === "text") return textWordmark(d, opts.big);
+    if (style === "lockup") {
+      // Full lockup is ~4.7:1 — design-system minimum width 120px.
+      return logoImg(d, B.lockupUrl, Math.max(opts.lockupWidth || 170, 120));
     }
-    // Text wordmark fallback — renders everywhere.
-    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:${opts.big ? 24 : 20}px;font-weight:bold;font-style:italic;color:${B.colors.primary};letter-spacing:1px;">FORZA</td></tr><tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;color:${d.accent};letter-spacing:4px;">PAYMENTS</td></tr></table>`;
+    // FP mark (~2:1). A custom logo URL overrides it.
+    return logoImg(d, d.logoUrl || B.logoUrl, Math.min(opts.width || 86, 96));
+  }
+
+  // Lockup banner row used by templates that show the full logo up top.
+  function lockupHeader(d, width) {
+    if ((d.logoStyle || "mark") !== "lockup") return "";
+    return `<tr><td colspan="2" style="padding:0 0 12px;">${logoImg(d, B.lockupUrl, width || 190)}</td></tr>`;
   }
 
   function photoCell(d, size) {
@@ -80,18 +84,37 @@
     return `<img src="${esc(normalizeUrl(d.photoUrl))}" alt="${esc(d.fullName)}" width="${size}" height="${size}" style="display:block;border-radius:50%;border:0;width:${size}px;height:${size}px;object-fit:cover;">`;
   }
 
-  function ctaButton(d) {
+  /* ---------- shared blocks ---------- */
+  function ctaButton(d, opts = {}) {
+    const btn = (bg, fg, href, label) =>
+      `<td style="background-color:${bg};border-radius:4px;"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:8px 18px;font-family:${FONT(d)};font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${fg};text-decoration:none;">${esc(label)}</a></td>`;
     const cells = [];
-    if (d.ctaText && d.ctaUrl) {
-      cells.push(`<td style="background-color:${d.accent};border-radius:4px;"><a href="${esc(withUtm(normalizeUrl(d.ctaUrl), d))}" target="_blank" style="display:inline-block;padding:7px 16px;font-family:${FONT(d)};font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">${esc(d.ctaText)}</a></td>`);
-    }
+    if (d.ctaText && d.ctaUrl) cells.push(btn(d.accent, "#FFFFFF", withUtm(normalizeUrl(d.ctaUrl), d), d.ctaText));
     if (d.bookingUrl) {
-      const sep = cells.length ? `<td style="width:8px;font-size:0;">&nbsp;</td>` : "";
-      cells.push(`${sep}<td style="background-color:${B.colors.primary};border-radius:4px;"><a href="${esc(withUtm(normalizeUrl(d.bookingUrl), d))}" target="_blank" style="display:inline-block;padding:7px 16px;font-family:${FONT(d)};font-size:13px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Book a Meeting</a></td>`);
+      if (cells.length) cells.push(`<td style="width:8px;font-size:0;">&nbsp;</td>`);
+      cells.push(btn(opts.bookBg || B.colors.primary, opts.bookColor || "#FFFFFF", withUtm(normalizeUrl(d.bookingUrl), d), "Book a Meeting"));
     }
     if (!cells.length) return "";
-    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:10px;"><tr>${cells.join("")}</tr></table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr>${cells.join("")}</tr></table>`;
   }
+
+  function socialRow(d) {
+    const cells = SOCIALS.filter((s) => d[s.key]).map((s) => {
+      const href = withUtm(normalizeUrl(d[s.key]), d);
+      const bg = d.monoSocial ? d.accent : B.colors.primary;
+      return `<td style="padding:0 5px 0 0;"><a href="${esc(href)}" target="_blank" title="${s.name}" style="display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;background-color:${bg};color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;text-decoration:none;border-radius:3px;">${s.label}</a></td>`;
+    });
+    if (!cells.length) return "";
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:9px;"><tr>${cells.join("")}</tr></table>`;
+  }
+
+  const SOCIALS = [
+    { key: "linkedin", label: "in", name: "LinkedIn" },
+    { key: "twitter", label: "X", name: "X (Twitter)" },
+    { key: "facebook", label: "f", name: "Facebook" },
+    { key: "instagram", label: "ig", name: "Instagram" },
+    { key: "youtube", label: "yt", name: "YouTube" },
+  ];
 
   function qrBlock(d) {
     if (!d.qrEnabled) return "";
@@ -107,260 +130,320 @@
       "END:VCARD",
     ].filter(Boolean).join("\n");
     const src = "https://api.qrserver.com/v1/create-qr-code/?size=132x132&data=" + encodeURIComponent(vcard);
-    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td style="padding:0 10px 0 0;"><img src="${esc(src)}" alt="Scan to save contact" width="66" height="66" style="display:block;border:0;width:66px;height:66px;"></td><td style="font-family:${FONT(d)};font-size:11px;color:${B.colors.muted};">Scan to save<br>my contact</td></tr></table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td style="padding:0 10px 0 0;"><img src="${esc(src)}" alt="Scan to save contact" width="64" height="64" style="display:block;border:0;width:64px;height:64px;"></td><td style="font-family:${FONT(d)};font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;line-height:1.6;color:${B.colors.faint};">Scan to save<br>my contact</td></tr></table>`;
   }
 
   function bannerBlock(d) {
     if (!d.bannerText) return "";
-    const inner = `<span style="font-family:${FONT(d)};font-size:13px;font-weight:bold;color:${B.colors.primary};">${esc(d.bannerText)}</span>`;
+    const inner = `<span style="font-family:${FONT(d)};font-size:12.5px;font-weight:bold;color:${B.colors.primary};">${esc(d.bannerText)}</span>`;
     const content = d.bannerUrl
-      ? `<a href="${esc(withUtm(normalizeUrl(d.bannerUrl), d))}" target="_blank" style="text-decoration:none;">${inner} <span style="color:${d.accent};font-family:${FONT(d)};font-size:13px;font-weight:bold;">&rarr;</span></a>`
+      ? `<a href="${esc(withUtm(normalizeUrl(d.bannerUrl), d))}" target="_blank" style="text-decoration:none;">${inner} <span style="color:${d.accent};font-family:${FONT(d)};font-size:12.5px;font-weight:bold;">&rarr;</span></a>`
       : inner;
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="background-color:${B.colors.light};border-left:4px solid ${d.accent};padding:10px 14px;">${content}</td></tr></table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="background-color:${B.colors.light};border-left:3px solid ${d.accent};padding:10px 14px;">${content}</td></tr></table>`;
   }
 
   function disclaimerBlock(d) {
     const text = d.disclaimer === "custom" ? d.customDisclaimer : B.disclaimers[d.disclaimer];
     if (!text) return "";
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="font-family:${FONT(d)};font-size:10px;line-height:14px;color:${B.colors.muted};border-top:1px solid ${B.colors.border};padding-top:8px;">${esc(text)}</td></tr></table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;"><tr><td style="font-family:${FONT(d)};font-size:10px;line-height:14px;color:${B.colors.faint};border-top:1px solid ${B.colors.border};padding-top:8px;">${esc(text)}</td></tr></table>`;
   }
 
-  function contactLines(d, opts = {}) {
-    const sep = `<span style="color:${B.colors.muted};">&nbsp;|&nbsp;</span>`;
-    const size = opts.size || 13;
-    const line = (label, html) =>
-      `<td style="font-family:${FONT(d)};font-size:${size}px;line-height:20px;color:${B.colors.text};padding:0;">${html}</td>`;
-    const rows = [];
-    const phones = [];
-    if (d.phone) phones.push(`<span style="color:${B.colors.muted};">P:</span> ${link(d, "tel:" + d.phone.replace(/[^+\d]/g, ""), d.phone, { color: B.colors.text })}`);
-    if (d.mobile) phones.push(`<span style="color:${B.colors.muted};">M:</span> ${link(d, "tel:" + d.mobile.replace(/[^+\d]/g, ""), d.mobile, { color: B.colors.text })}`);
-    if (phones.length) rows.push(line("phones", phones.join(sep)));
-    const web = [];
-    if (d.email) web.push(link(d, "mailto:" + d.email, d.email));
-    if (d.website) web.push(link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, "")));
-    if (web.length) rows.push(line("web", web.join(sep)));
-    if (d.address) rows.push(line("address", `<span style="color:${B.colors.muted};">${esc(d.address)}</span>`));
-    return rows.map((r) => `<tr>${r}</tr>`).join("");
+  // Labelled contact rows (D/M/E/W) — the design system's house style.
+  function contactRows(d, opts = {}) {
+    const size = opts.size || 12;
+    const lab = (l) => `<span style="color:${opts.labelColor || B.colors.faint};font-weight:bold;">${l}</span>&nbsp;&nbsp;`;
+    let rows = "";
+    if (d.phone) rows += lab("D") + telLink(d, d.phone, { size, color: opts.textColor }) + "<br>";
+    if (d.mobile) rows += lab("M") + telLink(d, d.mobile, { size, color: opts.textColor }) + "<br>";
+    if (d.email) rows += lab("E") + link(d, "mailto:" + d.email, d.email, { size, color: opts.textColor || B.colors.text }) + "<br>";
+    if (d.website) rows += lab("W") + link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size }) + "<br>";
+    if (!rows) return "";
+    return `<div style="font-family:${FONT(d)};font-size:${size}px;color:${opts.textColor || B.colors.text};line-height:1.8;">${rows}</div>`;
   }
 
+  // One-line contact string separated by middots.
+  function contactInline(d, opts = {}) {
+    const size = opts.size || 12;
+    const bits = [];
+    if (d.phone) bits.push(telLink(d, d.phone, { size, color: opts.textColor }));
+    if (d.mobile && opts.mobile !== false) bits.push(telLink(d, d.mobile, { size, color: opts.textColor }));
+    if (d.email) bits.push(link(d, "mailto:" + d.email, d.email, { size, color: opts.textColor || B.colors.text }));
+    if (d.website) bits.push(link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size }));
+    return bits.join(DOT);
+  }
+
+  // Name / title / company stack. Title is uppercase, letter-spaced, red.
   function nameBlock(d, opts = {}) {
+    const F = FONT(d);
     const nameSize = opts.nameSize || 17;
-    let html = `<tr><td style="font-family:${FONT(d)};font-size:${nameSize}px;font-weight:bold;color:${B.colors.primary};padding:0;line-height:${nameSize + 5}px;">${esc(d.fullName)}</td></tr>`;
     const sub = [d.jobTitle, d.department].filter(Boolean).join(", ");
-    if (sub) html += `<tr><td style="font-family:${FONT(d)};font-size:13px;color:${d.accent};font-weight:bold;padding:2px 0 0;">${esc(sub)}</td></tr>`;
-    if (d.company) html += `<tr><td style="font-family:${FONT(d)};font-size:13px;color:${B.colors.text};padding:1px 0 0;">${esc(d.company)}</td></tr>`;
+    let html = `<div style="font-family:${F};font-size:${nameSize}px;font-weight:bold;color:${opts.nameColor || B.colors.primary};line-height:1.25;">${esc(d.fullName)}</div>`;
+    if (sub) html += `<div style="font-family:${F};font-size:11px;font-weight:bold;color:${opts.subColor || d.accent};text-transform:uppercase;letter-spacing:1.5px;padding-top:4px;">${esc(sub)}</div>`;
+    if (d.company && opts.company !== false) html += `<div style="font-family:${F};font-size:12.5px;font-weight:bold;color:${opts.companyColor || B.colors.primary};padding-top:8px;">${esc(d.company)}</div>`;
     return html;
+  }
+
+  function address(d, opts = {}) {
+    if (!d.address) return "";
+    return `<div style="font-family:${FONT(d)};font-size:11px;color:${opts.color || B.colors.faint};padding-top:5px;">${esc(d.address)}</div>`;
   }
 
   function wrap(d, inner, width) {
     return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;max-width:${width}px;">${inner}</table>`;
   }
 
-  const TEMPLATES = {
-    classic(d) {
-      const left = d.photoUrl
-        ? photoCell(d, 84)
-        : wordmark(d, { width: 110 });
-      const inner = `
-<tr>
-  <td valign="top" style="padding:0 16px 0 0;border-right:2px solid ${d.accent};">${left}</td>
-  <td valign="top" style="padding:0 0 0 16px;">
-    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-      ${nameBlock(d)}
-      <tr><td style="padding:6px 0 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d)}</table></td></tr>
-      <tr><td style="padding:0;">${socialRow(d)}</td></tr>
-      <tr><td style="padding:0;">${ctaButton(d)}</td></tr>
-    </table>
-  </td>
-</tr>
-<tr><td colspan="2" style="padding:0;">${d.photoUrl ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td>${wordmark(d, { width: 110 })}</td></tr></table>` : ""}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-      return wrap(d, inner, 520);
-    },
+  function tail(d, colspan) {
+    return `<tr><td${colspan ? ` colspan="${colspan}"` : ""} style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+  }
 
-    modern(d) {
-      const inner = `
-<tr>
-  <td style="padding:0 0 0 14px;border-left:4px solid ${d.accent};">
-    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-      ${d.photoUrl ? `<tr><td style="padding:0 0 8px;">${photoCell(d, 72)}</td></tr>` : ""}
-      ${nameBlock(d, { nameSize: 18 })}
-      <tr><td style="padding:6px 0 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d)}</table></td></tr>
-      <tr><td style="padding:0;">${socialRow(d)}</td></tr>
-    </table>
-  </td>
-</tr>
-<tr><td style="padding:10px 0 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="padding:0 12px 0 0;">${wordmark(d, { width: 100 })}</td><td>${ctaButton(d)}</td></tr></table></td></tr>
-<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-      return wrap(d, inner, 520);
-    },
+  /* =======================================================================
+     TEMPLATES
+     ======================================================================= */
+  const TEMPLATES = {};
 
-    compact(d) {
-      const sep = `<span style="color:${B.colors.muted};">&nbsp;&bull;&nbsp;</span>`;
-      const bits = [];
-      if (d.jobTitle) bits.push(`<span style="color:${B.colors.text};">${esc(d.jobTitle)}</span>`);
-      bits.push(`<span style="font-weight:bold;color:${d.accent};">${esc(d.company || B.companyName)}</span>`);
-      if (d.phone) bits.push(link(d, "tel:" + d.phone.replace(/[^+\d]/g, ""), d.phone, { color: B.colors.text }));
-      if (d.website) bits.push(link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, "")));
-      const inner = `
-<tr><td style="font-family:${FONT(d)};font-size:15px;font-weight:bold;color:${B.colors.primary};padding:0;">${esc(d.fullName)}</td></tr>
-<tr><td style="font-family:${FONT(d)};font-size:12px;line-height:18px;padding:2px 0 0;">${bits.join(sep)}</td></tr>
-<tr><td style="padding:0;">${socialRow(d)}</td></tr>
-<tr><td style="padding:0;">${ctaButton(d)}</td></tr>
-<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-      return wrap(d, inner, 560);
-    },
-
-    executive(d) {
-      const inner = `
-<tr>
-  ${d.photoUrl ? `<td valign="top" style="padding:0 18px 0 0;">${photoCell(d, 96)}</td>` : ""}
-  <td valign="top">
-    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-      ${nameBlock(d, { nameSize: 20 })}
-      <tr><td style="padding:8px 0;"><table cellpadding="0" cellspacing="0" border="0" width="40" style="border-collapse:collapse;"><tr><td height="2" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
-      <tr><td style="padding:0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d)}</table></td></tr>
-      <tr><td style="padding:0;">${socialRow(d)}</td></tr>
-      <tr><td style="padding:0;">${ctaButton(d)}</td></tr>
-    </table>
-  </td>
-</tr>
-<tr><td colspan="${d.photoUrl ? 2 : 1}" style="padding:12px 0 0;">${wordmark(d, { width: 120 })}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-      return wrap(d, inner, 540);
-    },
-  };
-
-  /* ---- second wave of templates ---- */
-
-  TEMPLATES.bold = function (d) {
-    const inner = `
-<tr><td style="background-color:${B.colors.primary};padding:14px 18px;">
-  <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>
-    ${d.photoUrl ? `<td style="padding:0 14px 0 0;">${photoCell(d, 64)}</td>` : ""}
-    <td>
-      <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-        <tr><td style="font-family:${FONT(d)};font-size:19px;font-weight:bold;color:#FFFFFF;padding:0;">${esc(d.fullName)}</td></tr>
-        ${d.jobTitle ? `<tr><td style="font-family:${FONT(d)};font-size:13px;font-weight:bold;color:${d.accent === B.colors.primary ? "#FFFFFF" : d.accent};padding:3px 0 0;">${esc([d.jobTitle, d.department].filter(Boolean).join(", "))}</td></tr>` : ""}
-      </table>
-    </td>
-  </tr></table>
-</td></tr>
-<tr><td style="border-left:4px solid ${d.accent};padding:12px 0 0 14px;">
-  <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d)}</table>
-  ${socialRow(d)}
-  ${ctaButton(d)}
-</td></tr>
-<tr><td style="padding:12px 0 0;">${wordmark(d, { width: 110 })}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-    return wrap(d, inner, 520);
-  };
-
-  TEMPLATES.centered = function (d) {
-    const center = (html) => `<tr><td align="center" style="padding:0;text-align:center;">${html}</td></tr>`;
-    const inner = `
-${center(d.photoUrl ? photoCell(d, 84).replace('style="display:block;', 'style="display:inline-block;') : wordmark(d, { width: 130 }).replace('style="display:block;', 'style="display:inline-block;'))}
-<tr><td align="center" style="font-family:${FONT(d)};font-size:18px;font-weight:bold;color:${B.colors.primary};padding:10px 0 0;text-align:center;">${esc(d.fullName)}</td></tr>
-${d.jobTitle || d.department ? `<tr><td align="center" style="font-family:${FONT(d)};font-size:13px;font-weight:bold;color:${d.accent};padding:2px 0 0;text-align:center;">${esc([d.jobTitle, d.department].filter(Boolean).join(", "))}</td></tr>` : ""}
-${d.company ? `<tr><td align="center" style="font-family:${FONT(d)};font-size:13px;color:${B.colors.text};padding:1px 0 0;text-align:center;">${esc(d.company)}</td></tr>` : ""}
-<tr><td align="center" style="padding:8px 0 0;"><table cellpadding="0" cellspacing="0" border="0" width="44" style="border-collapse:collapse;"><tr><td height="2" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
-<tr><td align="center" style="padding:6px 0 0;text-align:center;"><table align="center" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:0 auto;">${contactLines(d)}</table></td></tr>
-<tr><td align="center" style="padding:0;text-align:center;">${socialRow(d).replace('style="border-collapse:collapse;', 'align="center" style="margin:8px auto 0;border-collapse:collapse;')}</td></tr>
-<tr><td align="center" style="padding:0;text-align:center;">${ctaButton(d).replace('style="border-collapse:collapse;', 'align="center" style="margin:10px auto 0;border-collapse:collapse;')}</td></tr>
-<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-    return wrap(d, inner, 440);
-  };
-
-  TEMPLATES.minimal = function (d) {
-    // Understated: thin rule, spaced caps, text links only — no badges or buttons.
-    const textLinks = SOCIALS.filter((s) => d[s.key]).map((s) =>
-      link(d, withUtm(normalizeUrl(d[s.key]), d), s.name, { color: B.colors.muted, size: 12 })).join(`<span style="color:${B.colors.muted};">&nbsp;/&nbsp;</span>`);
-    const cta = d.ctaText && d.ctaUrl
-      ? `<tr><td style="padding:8px 0 0;">${link(d, withUtm(normalizeUrl(d.ctaUrl), d), d.ctaText + " →", { bold: true })}</td></tr>` : "";
-    const book = d.bookingUrl
-      ? `<tr><td style="padding:4px 0 0;">${link(d, withUtm(normalizeUrl(d.bookingUrl), d), "Book a meeting →", { bold: true, color: B.colors.primary })}</td></tr>` : "";
-    const inner = `
-<tr><td style="padding:0 0 10px;"><table cellpadding="0" cellspacing="0" border="0" width="180" style="border-collapse:collapse;"><tr><td height="1" style="background-color:${B.colors.primary};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
-<tr><td style="font-family:${FONT(d)};font-size:15px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:${B.colors.primary};padding:0;">${esc(d.fullName)}</td></tr>
-${d.jobTitle ? `<tr><td style="font-family:${FONT(d)};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${B.colors.muted};padding:4px 0 0;">${esc([d.jobTitle, d.company].filter(Boolean).join(" · "))}</td></tr>` : ""}
-<tr><td style="padding:8px 0 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d, { size: 12 })}</table></td></tr>
-${textLinks ? `<tr><td style="padding:6px 0 0;">${textLinks}</td></tr>` : ""}
-${cta}${book}
-<tr><td style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-    return wrap(d, inner, 520);
-  };
-
-  TEMPLATES.corporate = function (d) {
-    const inner = `
-<tr><td colspan="2" style="padding:0 0 10px;">${wordmark(d, { width: 140 })}</td></tr>
-<tr><td colspan="2" style="padding:0 0 12px;"><table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td height="2" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
-<tr>
-  <td valign="top" style="padding:0 20px 0 0;">
-    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-      ${d.photoUrl ? `<tr><td style="padding:0 0 8px;">${photoCell(d, 68)}</td></tr>` : ""}
-      ${nameBlock(d)}
-    </table>
-  </td>
-  <td valign="top" align="right" style="text-align:right;">
-    <table align="right" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${contactLines(d)}</table>
-  </td>
-</tr>
-<tr>
-  <td style="padding:4px 0 0;">${socialRow(d)}</td>
-  <td align="right" style="text-align:right;">${ctaButton(d).replace('style="border-collapse:collapse;', 'align="right" style="border-collapse:collapse;')}</td>
-</tr>
-<tr><td colspan="2" style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
-    return wrap(d, inner, 560);
-  };
-
-  /* ---- official design-system templates ---- */
-
-  // Flagship: straight from the design system's email-signature spec —
-  // FP mark left of a 3px red divider, D/M/E/W contact rows, tagline.
+  // ---- Forza: the design system's email-signature spec ----
   TEMPLATES.forza = function (d) {
     const F = FONT(d);
-    const row = (label, html) =>
-      `<span style="color:${B.colors.muted};">${label}</span>&nbsp;&nbsp;${html}<br>`;
-    let rows = "";
-    if (d.phone) rows += row("D", link(d, "tel:" + d.phone.replace(/[^+\d]/g, ""), d.phone, { color: B.colors.text, size: 12 }));
-    if (d.mobile) rows += row("M", link(d, "tel:" + d.mobile.replace(/[^+\d]/g, ""), d.mobile, { color: B.colors.text, size: 12 }));
-    if (d.email) rows += row("E", link(d, "mailto:" + d.email, d.email, { color: B.colors.text, size: 12 }));
-    if (d.website) rows += row("W", link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size: 12 }));
-    const sub = [d.jobTitle, d.department].filter(Boolean).join(", ");
-    const inner = `
+    const useLockupTop = (d.logoStyle || "mark") === "lockup";
+    const leftArt = d.photoUrl ? photoCell(d, 86) : (useLockupTop ? "" : wordmark(d, { width: 86 }));
+    const body = `
+      ${nameBlock(d)}
+      <div style="padding-top:8px;">${contactRows(d)}</div>
+      ${address(d)}
+      <div style="font-family:${F};font-size:10.5px;color:${B.colors.faint};line-height:1.5;padding-top:12px;max-width:380px;">${esc(B.tagline)}</div>
+      ${socialRow(d)}
+      ${ctaButton(d)}`;
+    const inner = leftArt
+      ? `${lockupHeader(d, 190)}
 <tr>
-  <td style="vertical-align:top;padding:2px 20px 0 0;border-right:3px solid ${d.accent};">${d.photoUrl ? photoCell(d, 86) : wordmark(d, { width: 86 })}</td>
-  <td style="vertical-align:top;padding:0 0 0 20px;font-family:${F};">
-    <div style="font-size:16px;font-weight:bold;color:${B.colors.primary};line-height:1.3;">${esc(d.fullName)}</div>
-    ${sub ? `<div style="font-size:12px;font-weight:bold;color:${d.accent};text-transform:uppercase;letter-spacing:1px;padding-top:3px;">${esc(sub)}</div>` : ""}
-    ${d.company ? `<div style="font-size:13px;font-weight:bold;color:${B.colors.primary};padding-top:9px;">${esc(d.company)}</div>` : ""}
-    <div style="font-size:12px;color:${B.colors.text};line-height:1.75;padding-top:7px;">${rows}</div>
-    ${d.address ? `<div style="font-size:11px;color:${B.colors.faint};padding-top:4px;">${esc(d.address)}</div>` : ""}
-    <div style="font-size:10.5px;color:${B.colors.faint};line-height:1.5;padding-top:12px;max-width:380px;">${esc(B.tagline)}</div>
-    ${socialRow(d)}
-    ${ctaButton(d)}
-  </td>
+  <td style="vertical-align:top;padding:2px 20px 0 0;border-right:3px solid ${d.accent};">${leftArt}</td>
+  <td style="vertical-align:top;padding:0 0 0 20px;">${body}</td>
 </tr>
-<tr><td colspan="2" style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+${tail(d, 2)}`
+      : `${lockupHeader(d, 190)}
+<tr><td style="border-left:3px solid ${d.accent};padding:2px 0 2px 20px;">${body}</td></tr>
+${tail(d)}`;
     return wrap(d, inner, 540);
   };
 
-  // The spec's compact variant — replies and mobile.
+  // ---- Forza Compact: the spec's reply/mobile variant ----
   TEMPLATES.forzacompact = function (d) {
     const F = FONT(d);
-    const dot = `&nbsp;<span style="color:${B.colors.faint};">·</span>&nbsp;`;
+    const small = (d.logoStyle || "mark") === "lockup"
+      ? logoImg(d, B.lockupUrl, 132)
+      : (d.photoUrl ? photoCell(d, 48) : wordmark(d, { width: 48 }));
     const bits = [];
-    if (d.phone) bits.push(link(d, "tel:" + d.phone.replace(/[^+\d]/g, ""), d.phone, { color: B.colors.text, size: 12 }));
-    if (d.email) bits.push(link(d, "mailto:" + d.email, d.email, { color: B.colors.text, size: 12 }));
+    if (d.phone) bits.push(telLink(d, d.phone, { size: 12 }));
+    if (d.email) bits.push(link(d, "mailto:" + d.email, d.email, { size: 12, color: B.colors.text }));
     if (d.website) bits.push(link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size: 12 }));
     if (d.bookingUrl) bits.push(link(d, withUtm(normalizeUrl(d.bookingUrl), d), "Book a meeting", { bold: true, color: B.colors.primary, size: 12 }));
     const inner = `
 <tr>
-  <td style="vertical-align:middle;padding:0 16px 0 0;">${d.photoUrl ? photoCell(d, 48) : wordmark(d, { width: 48 })}</td>
-  <td style="vertical-align:middle;border-left:3px solid ${d.accent};padding:2px 0 2px 16px;font-family:${F};">
-    <div style="font-size:14px;font-weight:bold;color:${B.colors.primary};">${esc(d.fullName)}${d.company ? ` <span style="font-weight:normal;color:${B.colors.faint};">·</span> <span style="font-size:12px;font-weight:bold;color:${d.accent};">${esc(d.company)}</span>` : ""}</div>
-    <div style="font-size:12px;color:${B.colors.text};padding-top:4px;">${bits.join(dot)}</div>
+  <td style="vertical-align:middle;padding:0 16px 0 0;">${small}</td>
+  <td style="vertical-align:middle;border-left:3px solid ${d.accent};padding:3px 0 3px 16px;">
+    <div style="font-family:${F};font-size:14px;font-weight:bold;color:${B.colors.primary};">${esc(d.fullName)}${d.jobTitle ? `${DOT}<span style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${d.accent};">${esc(d.jobTitle)}</span>` : ""}</div>
+    <div style="font-family:${F};font-size:12px;color:${B.colors.text};padding-top:5px;">${bits.join(DOT)}</div>
   </td>
 </tr>
-<tr><td colspan="2" style="padding:0;">${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+${tail(d, 2)}`;
+    return wrap(d, inner, 580);
+  };
+
+  // ---- Carbon: dark flagship — the signature as an F1 livery card ----
+  TEMPLATES.carbon = function (d) {
+    const F = FONT(d);
+    const faint = "#9CA3AF";
+    const logo = (d.logoStyle || "mark") === "lockup"
+      ? logoImg(d, "https://forza-email-signatures.vercel.app/assets/brand/forza-lockup-dark.png", 170)
+      : ((d.logoStyle || "mark") === "mark"
+        ? logoImg(d, "https://forza-email-signatures.vercel.app/assets/brand/forza-f-mark-dark.png", 72)
+        : "");
+    const site = d.website ? link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size: 12 }) : "";
+    const phones = [d.phone, d.mobile].filter(Boolean).map((p) => telLink(d, p, { size: 12, color: "#E5E7EB" })).join(DOT);
+    const inner = `
+<tr><td style="background-color:${B.colors.primary};border-radius:6px;padding:20px 22px;border-left:4px solid ${d.accent};">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+    <tr>
+      <td style="vertical-align:top;">
+        <div style="font-family:${F};font-size:18px;font-weight:bold;color:#FFFFFF;line-height:1.2;">${esc(d.fullName)}</div>
+        ${d.jobTitle ? `<div style="font-family:${F};font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${d.accent === B.colors.primary ? "#FFFFFF" : d.accent};padding-top:5px;">${esc([d.jobTitle, d.department].filter(Boolean).join(", "))}</div>` : ""}
+        ${d.company ? `<div style="font-family:${F};font-size:12px;font-weight:bold;color:#E5E7EB;padding-top:10px;">${esc(d.company)}</div>` : ""}
+        <div style="font-family:${F};font-size:12px;color:#E5E7EB;line-height:1.8;padding-top:8px;">
+          ${phones ? phones + "<br>" : ""}
+          ${d.email ? link(d, "mailto:" + d.email, d.email, { size: 12, color: "#E5E7EB" }) + (site ? DOT + site : "") : site}
+        </div>
+      </td>
+      ${d.photoUrl ? `<td style="vertical-align:top;padding:0 0 0 18px;" align="right">${photoCell(d, 72)}</td>`
+        : (logo ? `<td style="vertical-align:bottom;padding:0 0 0 18px;" align="right">${logo}</td>` : "")}
+    </tr>
+    ${(d.photoUrl && logo) ? `<tr><td colspan="2" style="padding:14px 0 0;">${logo}</td></tr>` : ""}
+    <tr><td colspan="2" style="padding:2px 0 0;">${socialRow(d)}${ctaButton(d, { bookBg: "#FFFFFF", bookColor: B.colors.primary })}</td></tr>
+  </table>
+</td></tr>
+<tr><td style="font-family:${F};font-size:10px;color:${faint};padding:8px 2px 0;">${esc(B.tagline)}</td></tr>
+${tail(d)}`;
     return wrap(d, inner, 560);
+  };
+
+  // ---- Classic: art left of a red divider ----
+  TEMPLATES.classic = function (d) {
+    const left = d.photoUrl ? photoCell(d, 84) : wordmark(d, { width: 80, lockupWidth: 150 });
+    const bottomLogo = d.photoUrl
+      ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td>${wordmark(d, { width: 80, lockupWidth: 150 })}</td></tr></table>` : "";
+    const inner = `
+<tr>
+  <td style="vertical-align:top;padding:2px 18px 2px 0;border-right:3px solid ${d.accent};">${left}</td>
+  <td style="vertical-align:top;padding:0 0 0 18px;">
+    ${nameBlock(d)}
+    <div style="padding-top:8px;">${contactRows(d)}</div>
+    ${address(d)}
+    ${socialRow(d)}
+    ${ctaButton(d)}
+  </td>
+</tr>
+<tr><td colspan="2" style="padding:0;">${bottomLogo}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 540);
+  };
+
+  // ---- Modern: red rail, logo + buttons footer ----
+  TEMPLATES.modern = function (d) {
+    const inner = `
+<tr>
+  <td style="padding:2px 0 2px 16px;border-left:3px solid ${d.accent};">
+    ${d.photoUrl ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:9px;"><tr><td>${photoCell(d, 68)}</td></tr></table>` : ""}
+    ${nameBlock(d, { nameSize: 18 })}
+    <div style="padding-top:8px;font-family:${FONT(d)};font-size:12px;color:${B.colors.text};line-height:1.8;">${contactInline(d)}</div>
+    ${address(d)}
+    ${socialRow(d)}
+  </td>
+</tr>
+<tr><td style="padding:12px 0 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="vertical-align:middle;padding:0 14px 0 0;">${wordmark(d, { width: 72, lockupWidth: 150 })}</td><td style="vertical-align:middle;">${ctaButton(d).replace("margin-top:12px;", "")}</td></tr></table></td></tr>
+${tail(d)}`;
+    return wrap(d, inner, 540);
+  };
+
+  // ---- Compact: one-liner ----
+  TEMPLATES.compact = function (d) {
+    const F = FONT(d);
+    const bits = [];
+    if (d.jobTitle) bits.push(`<span style="color:${B.colors.muted};">${esc(d.jobTitle)}</span>`);
+    bits.push(`<span style="font-weight:bold;color:${d.accent};">${esc(d.company || B.companyShort)}</span>`);
+    if (d.phone) bits.push(telLink(d, d.phone, { size: 12 }));
+    if (d.email) bits.push(link(d, "mailto:" + d.email, d.email, { size: 12, color: B.colors.text }));
+    if (d.website) bits.push(link(d, withUtm(normalizeUrl(d.website), d), d.website.replace(/^https?:\/\//i, ""), { bold: true, size: 12 }));
+    const inner = `
+<tr><td style="font-family:${F};font-size:15px;font-weight:bold;color:${B.colors.primary};padding:0;">${esc(d.fullName)}</td></tr>
+<tr><td style="font-family:${F};font-size:12px;line-height:1.7;padding:3px 0 0;">${bits.join(DOT)}</td></tr>
+<tr><td style="padding:0;">${socialRow(d)}</td></tr>
+<tr><td style="padding:0;">${ctaButton(d)}</td></tr>
+${tail(d)}`;
+    return wrap(d, inner, 580);
+  };
+
+  // ---- Executive: serif, understated, red keyline ----
+  TEMPLATES.executive = function (d) {
+    const inner = `
+<tr>
+  ${d.photoUrl ? `<td style="vertical-align:top;padding:0 20px 0 0;">${photoCell(d, 92)}</td>` : ""}
+  <td style="vertical-align:top;">
+    ${nameBlock(d, { nameSize: 20 })}
+    <table cellpadding="0" cellspacing="0" border="0" width="36" style="border-collapse:collapse;margin:9px 0;"><tr><td height="3" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table>
+    ${contactRows(d)}
+    ${address(d)}
+    ${socialRow(d)}
+    ${ctaButton(d)}
+  </td>
+</tr>
+<tr><td colspan="${d.photoUrl ? 2 : 1}" style="padding:14px 0 0;">${wordmark(d, { width: 84, lockupWidth: 160 })}${qrBlock(d)}${bannerBlock(d)}${disclaimerBlock(d)}</td></tr>`;
+    return wrap(d, inner, 540);
+  };
+
+  // ---- Bold: carbon header band with red underline ----
+  TEMPLATES.bold = function (d) {
+    const F = FONT(d);
+    const headRight = (d.logoStyle || "mark") !== "text" && (d.logoStyle || "mark") !== "none"
+      ? `<td style="vertical-align:middle;padding:0 0 0 16px;" align="right"><img src="https://forza-email-signatures.vercel.app/assets/brand/forza-f-mark-dark.png" alt="FP" width="44" style="display:block;border:0;width:44px;height:auto;"></td>` : "";
+    const inner = `
+<tr><td style="background-color:${B.colors.primary};border-bottom:3px solid ${d.accent};padding:14px 18px;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr>
+    ${d.photoUrl ? `<td style="padding:0 14px 0 0;">${photoCell(d, 60)}</td>` : ""}
+    <td style="vertical-align:middle;">
+      <div style="font-family:${F};font-size:18px;font-weight:bold;color:#FFFFFF;">${esc(d.fullName)}</div>
+      ${d.jobTitle ? `<div style="font-family:${F};font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${d.accent === B.colors.primary ? "#FFFFFF" : d.accent};padding-top:4px;">${esc([d.jobTitle, d.department].filter(Boolean).join(", "))}</div>` : ""}
+    </td>
+    ${headRight}
+  </tr></table>
+</td></tr>
+<tr><td style="padding:12px 2px 0;">
+  ${contactRows(d)}
+  ${address(d)}
+  ${socialRow(d)}
+  ${ctaButton(d)}
+</td></tr>
+${tail(d)}`;
+    return wrap(d, inner, 540);
+  };
+
+  // ---- Centered: stacked, mobile-friendly ----
+  TEMPLATES.centered = function (d) {
+    const F = FONT(d);
+    const art = d.photoUrl
+      ? photoCell(d, 84).replace('style="display:block;', 'style="display:inline-block;')
+      : wordmark(d, { width: 80, lockupWidth: 170 }).replace(/display:block;/g, "display:inline-block;");
+    const c = (html, pad) => `<tr><td align="center" style="padding:${pad || "0"};text-align:center;">${html}</td></tr>`;
+    const inner = `
+${art ? c(art) : ""}
+${c(`<div style="font-family:${F};font-size:18px;font-weight:bold;color:${B.colors.primary};">${esc(d.fullName)}</div>`, "10px 0 0")}
+${d.jobTitle ? c(`<div style="font-family:${F};font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${d.accent};">${esc([d.jobTitle, d.department].filter(Boolean).join(", "))}</div>`, "4px 0 0") : ""}
+${d.company ? c(`<div style="font-family:${F};font-size:12.5px;font-weight:bold;color:${B.colors.primary};">${esc(d.company)}</div>`, "6px 0 0") : ""}
+${c(`<table cellpadding="0" cellspacing="0" border="0" width="40" style="border-collapse:collapse;"><tr><td height="3" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table>`, "9px 0")}
+${c(`<div style="font-family:${F};font-size:12px;color:${B.colors.text};line-height:1.9;">${contactInline(d)}</div>`)}
+${c(socialRow(d).replace('style="border-collapse:collapse;', 'align="center" style="margin:0 auto;border-collapse:collapse;'), "2px 0 0")}
+${c(ctaButton(d).replace('style="border-collapse:collapse;', 'align="center" style="margin:0 auto;border-collapse:collapse;'), "10px 0 0")}
+${tail(d)}`;
+    return wrap(d, inner, 460);
+  };
+
+  // ---- Minimal: spaced caps, text links only ----
+  TEMPLATES.minimal = function (d) {
+    const textLinks = SOCIALS.filter((s) => d[s.key]).map((s) =>
+      link(d, withUtm(normalizeUrl(d[s.key]), d), s.name, { color: B.colors.muted, size: 12 })).join(`<span style="color:${B.colors.faint};">&nbsp;/&nbsp;</span>`);
+    const cta = d.ctaText && d.ctaUrl
+      ? `<tr><td style="padding:9px 0 0;">${link(d, withUtm(normalizeUrl(d.ctaUrl), d), d.ctaText + " →", { bold: true })}</td></tr>` : "";
+    const book = d.bookingUrl
+      ? `<tr><td style="padding:4px 0 0;">${link(d, withUtm(normalizeUrl(d.bookingUrl), d), "Book a meeting →", { bold: true, color: B.colors.primary })}</td></tr>` : "";
+    const inner = `
+<tr><td style="padding:0 0 10px;"><table cellpadding="0" cellspacing="0" border="0" width="180" style="border-collapse:collapse;"><tr><td height="2" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+<tr><td style="font-family:${FONT(d)};font-size:15px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:${B.colors.primary};padding:0;">${esc(d.fullName)}</td></tr>
+${d.jobTitle ? `<tr><td style="font-family:${FONT(d)};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${B.colors.muted};padding:5px 0 0;">${esc([d.jobTitle, d.company].filter(Boolean).join(" · "))}</td></tr>` : ""}
+<tr><td style="padding:9px 0 0;"><div style="font-family:${FONT(d)};font-size:12px;color:${B.colors.text};line-height:1.9;">${contactInline(d)}</div></td></tr>
+${textLinks ? `<tr><td style="padding:7px 0 0;">${textLinks}</td></tr>` : ""}
+${cta}${book}
+${tail(d)}`;
+    return wrap(d, inner, 540);
+  };
+
+  // ---- Corporate: letterhead — logo over a red rule, contacts right ----
+  TEMPLATES.corporate = function (d) {
+    const inner = `
+<tr><td colspan="2" style="padding:0 0 10px;">${wordmark(d, { width: 84, lockupWidth: 190 })}</td></tr>
+<tr><td colspan="2" style="padding:0 0 14px;"><table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td height="3" style="background-color:${d.accent};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+<tr>
+  <td style="vertical-align:top;padding:0 24px 0 0;">
+    ${d.photoUrl ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:9px;"><tr><td>${photoCell(d, 64)}</td></tr></table>` : ""}
+    ${nameBlock(d)}
+  </td>
+  <td style="vertical-align:top;text-align:right;" align="right">
+    ${contactRows(d).replace("text-align:left", "text-align:right")}
+    ${address(d)}
+  </td>
+</tr>
+<tr>
+  <td style="padding:6px 0 0;">${socialRow(d)}</td>
+  <td align="right" style="text-align:right;">${ctaButton(d).replace('style="border-collapse:collapse;', 'align="right" style="border-collapse:collapse;')}</td>
+</tr>
+${tail(d, 2)}`;
+    return wrap(d, inner, 580);
   };
 
   window.renderSignature = function (d) {

@@ -72,7 +72,6 @@
 <script>
 (async function () {
   const $ = (id) => document.getElementById(id);
-  if (new URLSearchParams(location.search).get("embed")) document.body.classList.add("embed");
   const slug = new URLSearchParams(location.search).get("u");
   let booker = null, chosen = null;
 

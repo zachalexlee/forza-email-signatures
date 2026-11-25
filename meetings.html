@@ -61,9 +61,6 @@
         <button type="button" class="btn secondary btn-small" id="copyLinkBtn">Copy</button>
         <button type="button" class="btn secondary btn-small" id="toBuilderBtn">Use in my signature →</button></p>
       <p class="hint">Edit key (keep it safe — it's the only way to manage this page): <code id="mKeyShow"></code></p>
-      <p class="hint"><b>Website popup</b> — paste this on any site and visitors get your scheduling popup without leaving the page:</p>
-      <code class="snippet" id="mSnippet"></code>
-      <div class="row-buttons"><button type="button" class="btn secondary btn-small" id="copyEmbedBtn">Copy snippet</button></div>
       <h3 class="avail-head">Weekly availability (<span id="tzLabel3"></span>)</h3>
       <div id="mAvail"></div>
       <label style="max-width:200px;">Meeting length
@@ -178,9 +175,6 @@
     $("mSlot").value = String(bk.slot_minutes);
     readManageAvail = availEditor($("mAvail"), bk.availability);
     $("copyLinkBtn").onclick = () => navigator.clipboard.writeText(url);
-    const snippet = '<script src="' + new URL("embed.js", location.href).href + '" data-user="' + c.slug + '"></scr' + 'ipt>';
-    $("mSnippet").textContent = snippet;
-    $("copyEmbedBtn").onclick = () => navigator.clipboard.writeText(snippet);
     $("toBuilderBtn").onclick = () => { location.href = "index.html#booking=" + encodeURIComponent(url); };
     document.getElementById("create").classList.add("hidden");
     document.getElementById("manage").classList.remove("hidden");

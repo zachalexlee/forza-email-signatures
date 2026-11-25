@@ -57,7 +57,6 @@ const FORZA_BRAND = {
 
   // Where personal booking pages live (meeting booker).
   bookingBase: "https://forza-email-signatures.vercel.app/book.html",
-  embedBase: "https://forza-email-signatures.vercel.app",
 
   // Pre-designed banner gallery — voice per the brand book: short declaratives,
   // hard numbers, verb-forward CTAs, no emoji.

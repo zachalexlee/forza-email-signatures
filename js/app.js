@@ -20,6 +20,7 @@
     accent: B.colors.accent,
     disclaimer: "none",
     font: "",
+    logoStyle: "mark",
   };
   FIELDS.forEach((f) => (state[f] = $(f) ? $(f).value : ""));
   CHECKBOXES.forEach((f) => (state[f] = false));
@@ -71,6 +72,7 @@
     $("customDisclaimerWrap").classList.toggle("hidden", state.disclaimer !== "custom");
     $("utmCampaignWrap").classList.toggle("hidden", !state.utmEnabled);
     if ($("fontSelect")) $("fontSelect").value = state.font || "";
+    if ($("logoStyle")) $("logoStyle").value = state.logoStyle || "mark";
   }
 
   // ---------- presets ----------
@@ -328,31 +330,11 @@ ${sections.join("\n")}${script}`,
     });
     gallery.appendChild(clearBtn);
 
-    // Booking popup preview + website embed snippet
-    function refreshSnippet() {
-      const el = $("embedSnippet");
-      if (!el) return;
-      let slug = "";
-      try {
-        const u = new URL(/^https?:\/\//i.test(state.bookingUrl) ? state.bookingUrl : "https://" + state.bookingUrl);
-        slug = u.searchParams.get("u") || "";
-      } catch (e) {}
-      el.textContent = slug
-        ? '<script src="' + B.embedBase + '/embed.js" data-user="' + slug + '"></scr' + 'ipt>'
-        : "Enter your booking link above to generate the snippet.";
-    }
-    $("bookingUrl").addEventListener("input", refreshSnippet);
-    refreshSnippet();
-    $("popupPreviewBtn").addEventListener("click", () => {
-      if (!state.bookingUrl) { toast("Add your booking page link first"); return; }
-      const url = /^https?:\/\//i.test(state.bookingUrl) ? state.bookingUrl : "https://" + state.bookingUrl;
-      window.ForzaBooker.open(url);
-    });
-    $("copySnippetBtn").addEventListener("click", async () => {
-      const t = $("embedSnippet").textContent;
-      if (!t.startsWith("<script")) { toast("Add your booking page link first"); return; }
-      await navigator.clipboard.writeText(t);
-      toast("Embed snippet copied — paste it into your website");
+    // Logo style (FP mark / full lockup / text / none)
+    const logoSel = $("logoStyle");
+    logoSel.addEventListener("change", () => {
+      state.logoStyle = logoSel.value;
+      render(); save();
     });
 
     // Font choices from brand config.

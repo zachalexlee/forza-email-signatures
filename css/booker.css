@@ -54,9 +54,3 @@
 .btn-small { padding: 4px 10px; font-size: 12px; }
 .booking-item { padding: 10px 0; border-bottom: 1px solid var(--border-1); font-size: 13px; color: var(--fg-2); }
 .booking-item:last-child { border-bottom: 0; }
-
-/* Embedded in the popup widget (?embed=1): page chrome disappears. */
-body.embed .topbar, body.embed .footer { display: none; }
-body.embed { background: var(--white); }
-body.embed .book-layout { padding: 16px 16px 24px; }
-body.embed .panel { border: 0; padding: 10px 6px; }
