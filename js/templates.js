@@ -447,7 +447,7 @@ ${tail(d, 2)}`;
   };
 
   window.renderSignature = function (d) {
-    const fn = TEMPLATES[d.template] || TEMPLATES.forza;
+    const fn = TEMPLATES[d.template] || TEMPLATES.corporate;
     return fn(d).replace(/\n\s*/g, "");
   };
 })();

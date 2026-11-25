@@ -16,7 +16,7 @@
   const $ = (id) => document.getElementById(id);
 
   const state = {
-    template: "forza",
+    template: "corporate",
     accent: B.colors.accent,
     disclaimer: "none",
     font: "",

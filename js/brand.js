@@ -53,6 +53,13 @@ const FORZA_BRAND = {
     { name: "Georgia (modern serif)", stack: "Georgia, 'Times New Roman', serif" },
     { name: "Palatino (elegant serif)", stack: "'Palatino Linotype', 'Book Antiqua', Palatino, serif" },
     { name: "Times New Roman (classic serif)", stack: "'Times New Roman', Times, serif" },
+    { name: "Calibri (Outlook default)", stack: "Calibri, 'Segoe UI', Arial, sans-serif" },
+    { name: "Segoe UI (Windows)", stack: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" },
+    { name: "Century Gothic (geometric)", stack: "'Century Gothic', AppleGothic, Verdana, sans-serif" },
+    { name: "Lucida Sans (humanist)", stack: "'Lucida Sans Unicode', 'Lucida Grande', Verdana, sans-serif" },
+    { name: "Garamond (bookish serif)", stack: "Garamond, 'Times New Roman', serif" },
+    { name: "Book Antiqua (warm serif)", stack: "'Book Antiqua', Palatino, Georgia, serif" },
+    { name: "Courier New (typewriter)", stack: "'Courier New', Courier, monospace" },
   ],
 
   // Where personal booking pages live (meeting booker).
